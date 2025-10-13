@@ -1,0 +1,26 @@
+# FastAPI and server
+fastapi==0.115.0
+uvicorn[standard]==0.32.1
+python-multipart==0.0.20
+
+# Database
+sqlalchemy==2.0.36
+
+# PostgreSQL driver (for production)
+psycopg2-binary==2.9.10
+
+# Authentication
+pyjwt==2.10.1
+google-auth==2.37.0
+requests==2.32.3
+
+# Settings management
+pydantic==2.10.6
+pydantic-settings==2.7.1
+
+# ngrok for local development
+pyngrok==7.2.2
+
+# Development tools
+python-dotenv==1.0.1
+
