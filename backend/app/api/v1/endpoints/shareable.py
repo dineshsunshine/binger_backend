@@ -199,22 +199,69 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
     movies_json = "["
     for item in watchlist_items:
         movie_data = item.movie_data or {}
+        
+        # Extract data - handle both TMDb format and custom format
         title = movie_data.get('title', 'Untitled')
-        poster = movie_data.get('poster_path', '')
+        
+        # Handle poster/image
+        poster = movie_data.get('poster', '') or movie_data.get('poster_path', '') or movie_data.get('image', '')
         if poster and not poster.startswith('http'):
             poster = f"https://image.tmdb.org/t/p/w500{poster}"
-        overview = movie_data.get('overview', 'No description available')
-        release_date = movie_data.get('release_date', 'Unknown')
-        rating = movie_data.get('vote_average', 0)
+        
+        # Handle description
+        description = movie_data.get('description', '') or movie_data.get('overview', '') or 'No description available'
+        
+        # Handle year/release date
+        year = movie_data.get('year', '')
+        if not year:
+            release_date = movie_data.get('release_date', '')
+            if release_date:
+                year = release_date.split('-')[0] if '-' in release_date else release_date
+        
+        # Handle type (Film/TV Series)
+        media_type = movie_data.get('type', '') or movie_data.get('media_type', '')
+        if not media_type:
+            media_type = 'Film' if movie_data.get('id', '').startswith('movie') else 'TV Series'
+        
+        # Handle genres
+        genres = movie_data.get('genres', [])
+        if isinstance(genres, list):
+            genres_str = ', '.join(genres[:3])  # Max 3 genres
+        else:
+            genres_str = str(genres) if genres else ''
+        
+        # Handle languages
+        languages = movie_data.get('languages', [])
+        if isinstance(languages, list):
+            lang_str = ', '.join(languages[:2])  # Max 2 languages
+        else:
+            lang_str = str(languages) if languages else ''
+        
+        # Handle rating
+        rating = 0
+        ratings_data = movie_data.get('ratings', {})
+        if isinstance(ratings_data, dict):
+            if 'imdb' in ratings_data:
+                rating = ratings_data['imdb'].get('score', 0)
+            elif 'tmdb' in ratings_data:
+                rating = ratings_data['tmdb'].get('score', 0)
+        if not rating:
+            rating = movie_data.get('vote_average', 0) or movie_data.get('rating', 0)
+        
         watched = movie_data.get('watched', False)
+        added_at = item.added_at.isoformat() if hasattr(item, 'added_at') and item.added_at else ''
         
         movies_json += f"""{{
             "title": {repr(title)},
             "poster": {repr(poster)},
-            "overview": {repr(overview)},
-            "release_date": {repr(release_date)},
+            "description": {repr(description)},
+            "year": {repr(year)},
+            "type": {repr(media_type)},
+            "genres": {repr(genres_str)},
+            "languages": {repr(lang_str)},
             "rating": {rating},
-            "watched": {str(watched).lower()}
+            "watched": {str(watched).lower()},
+            "addedAt": {repr(added_at)}
         }},"""
     movies_json = movies_json.rstrip(',') + "]"
     
@@ -229,7 +276,7 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
         <title>{user_name}'s Watchlist - Binger</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
