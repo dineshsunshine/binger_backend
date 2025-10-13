@@ -482,6 +482,82 @@ VITE_GOOGLE_CLIENT_ID=862851161074-94fsq17r1325t789ckf61nd3oadtbfjd.apps.googleu
 
 ---
 
+## Shareable Watchlist Feature 🔗
+
+### Overview
+Users can create a unique, public shareable link to their watchlist. Anyone with the link can view the watchlist without logging in on a beautifully designed, Netflix-style page.
+
+**Key Features:**
+- ✅ One unique link per user
+- ✅ Public access (no login required)
+- ✅ Beautiful Netflix-inspired UI
+- ✅ Filtering (All, Watched, To Watch)
+- ✅ Revokable anytime
+
+### Create or Get Shareable Link
+
+**Endpoint:** `POST /Binger/api/shareable-link`  
+**Auth Required:** Yes
+
+```javascript
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/shareable-link', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  }
+});
+
+const data = await response.json();
+// data.shareable_url - The URL to share with friends
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "token": "unique-token",
+  "shareable_url": "https://binger-backend.onrender.com/Binger/shared/watchlist/unique-token",
+  "is_active": true,
+  "created_at": "2025-10-13T12:00:00Z"
+}
+```
+
+### Get Existing Link
+
+**Endpoint:** `GET /Binger/api/shareable-link`  
+**Auth Required:** Yes
+
+```javascript
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/shareable-link', {
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+
+const data = await response.json();
+// Returns link data or null if no link exists
+```
+
+### Delete Shareable Link
+
+**Endpoint:** `DELETE /Binger/api/shareable-link`  
+**Auth Required:** Yes
+
+```javascript
+await fetch('https://binger-backend.onrender.com/Binger/api/shareable-link', {
+  method: 'DELETE',
+  headers: {
+    'Authorization': `Bearer ${token}`
+  }
+});
+```
+
+**📚 For detailed integration guide, see:** `SHAREABLE_WATCHLIST_INTEGRATION.md`
+
+---
+
 ## Support & Documentation
 
 - **Interactive API Docs:** `/Binger/docs`
