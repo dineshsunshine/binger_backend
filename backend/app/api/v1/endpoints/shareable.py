@@ -260,6 +260,13 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
         if not rating:
             rating = movie_data.get('vote_average', 0) or movie_data.get('rating', 0)
         
+        # Handle cast
+        cast = movie_data.get('cast', [])
+        if isinstance(cast, list):
+            cast_json = repr(cast[:10])  # Max 10 cast members
+        else:
+            cast_json = '[]'
+        
         watched = movie_data.get('watched', False)
         added_at = item.added_at.isoformat() if hasattr(item, 'added_at') and item.added_at else ''
         
@@ -272,6 +279,7 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
             "genres": {repr(genres_str)},
             "languages": {repr(lang_str)},
             "rating": {rating},
+            "cast": {cast_json},
             "watched": {str(watched).lower()},
             "addedAt": {repr(added_at)}
         }},"""
