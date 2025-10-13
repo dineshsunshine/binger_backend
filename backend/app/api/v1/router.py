@@ -2,7 +2,7 @@
 API v1 router that combines all endpoint routers.
 """
 from fastapi import APIRouter
-from .endpoints import auth, user, watchlist, settings
+from .endpoints import auth, user, watchlist, settings, shareable
 
 api_router = APIRouter()
 
@@ -17,4 +17,7 @@ api_router.include_router(watchlist.router, prefix="/watchlist", tags=["watchlis
 
 # Settings endpoints
 api_router.include_router(settings.router, prefix="/settings", tags=["settings"])
+
+# Shareable links endpoints
+api_router.include_router(shareable.router, prefix="", tags=["shareable"])
 

@@ -5,6 +5,7 @@ from .auth import GoogleAuthRequest, TokenResponse
 from .user import UserResponse
 from .watchlist import MovieSchema, WatchlistResponse, WatchlistUpdateRequest
 from .settings import AppSettings
+from .shareable_link import ShareableLinkResponse, ShareableLinkDelete
 
 __all__ = [
     "GoogleAuthRequest",
@@ -13,6 +14,8 @@ __all__ = [
     "MovieSchema",
     "WatchlistResponse",
     "WatchlistUpdateRequest",
-    "AppSettings"
+    "AppSettings",
+    "ShareableLinkResponse",
+    "ShareableLinkDelete"
 ]
 
