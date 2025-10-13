@@ -124,8 +124,11 @@ async def delete_shareable_link(
     }
 
 
-@router.get("/shared/watchlist/{token}", response_class=HTMLResponse)
-async def view_shared_watchlist(
+# Note: The public watchlist viewing endpoint is now in main.py
+# to make it accessible at /Binger/shared/watchlist/{token} (not under /api)
+
+# Keeping this function here for reference but it's defined in main.py
+def _view_shared_watchlist_implementation(
     token: str,
     request: Request,
     db: Session = Depends(get_db)

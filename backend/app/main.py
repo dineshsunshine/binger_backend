@@ -1,11 +1,15 @@
 """
 FastAPI application initialization and configuration.
 """
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import HTMLResponse
+from sqlalchemy.orm import Session
 from .core.config import settings
-from .core.database import init_db
+from .core.database import init_db, get_db
 from .api.v1.router import api_router
+from .models.shareable_link import ShareableLink
+from .models.watchlist import WatchlistItem
 
 # Initialize database
 init_db()
@@ -41,6 +45,73 @@ async def health_check():
 
 # Include API routes
 app.include_router(api_router, prefix=settings.API_PREFIX)
+
+
+# Public shareable watchlist endpoint (not under /api)
+@app.get("/shared/watchlist/{token}", response_class=HTMLResponse)
+async def view_shared_watchlist(
+    token: str,
+    request: Request,
+    db: Session = Depends(get_db)
+):
+    """
+    Public endpoint to view a shared watchlist.
+    No authentication required.
+    """
+    # Find the shareable link
+    shareable_link = db.query(ShareableLink).filter(
+        ShareableLink.token == token,
+        ShareableLink.is_active == True
+    ).first()
+    
+    if not shareable_link:
+        return HTMLResponse(content="""
+        <!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Watchlist Not Found - Binger</title>
+            <style>
+                * { margin: 0; padding: 0; box-sizing: border-box; }
+                body {
+                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    min-height: 100vh;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    color: white;
+                }
+                .container {
+                    text-align: center;
+                    padding: 40px;
+                }
+                h1 { font-size: 72px; margin-bottom: 20px; }
+                p { font-size: 24px; opacity: 0.9; }
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <h1>🎬</h1>
+                <h1>404</h1>
+                <p>Watchlist not found or has been removed</p>
+            </div>
+        </body>
+        </html>
+        """, status_code=404)
+    
+    # Get user and watchlist
+    user = shareable_link.user
+    watchlist_items = db.query(WatchlistItem).filter(
+        WatchlistItem.user_id == user.id
+    ).order_by(WatchlistItem.added_at.desc()).all()
+    
+    # Generate HTML (import the function from endpoints/shareable.py)
+    from .api.v1.endpoints.shareable import generate_public_watchlist_html
+    html_content = generate_public_watchlist_html(user, watchlist_items)
+    
+    return HTMLResponse(content=html_content)
 
 
 if __name__ == "__main__":
