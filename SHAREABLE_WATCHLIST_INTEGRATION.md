@@ -328,9 +328,10 @@ function fallbackCopyTextToClipboard(text) {
 ## Important Notes
 
 ### 1. One Link Per User
-- Each user can only have ONE active shareable link at a time
-- Creating a new link while one exists will return the existing link
-- To get a new token, user must first delete the existing link
+- Each user can only have ONE shareable link (same URL forever)
+- Creating a link returns the existing URL if one was created before
+- Deleting a link deactivates it but preserves the URL
+- Recreating after deletion restores the same URL (not a new one)
 
 ### 2. Public Access
 - Anyone with the link can view the watchlist
@@ -349,8 +350,9 @@ Production:  https://binger-backend.onrender.com/Binger/shared/watchlist/{token}
 
 ### 5. Security
 - Tokens are cryptographically secure (16-byte URL-safe strings)
-- Links can be revoked anytime by deleting them
-- Deleted links return 404 page
+- Links can be revoked anytime (deactivated, not deleted)
+- Inactive links return 404 page
+- Same URL is restored when recreated (for user convenience)
 
 ---
 
