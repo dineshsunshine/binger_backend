@@ -57,5 +57,5 @@ databases:
   - name: binger-db
     databaseName: binger
     user: binger_user
-    plan: starter  # $7/month (includes backups)
+    # Using default paid plan (new flexible pricing)
 
