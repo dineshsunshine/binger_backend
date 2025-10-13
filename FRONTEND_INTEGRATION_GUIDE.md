@@ -2,11 +2,17 @@
 
 ## API Base URL
 - **Development:** `https://zestfully-chalky-nikia.ngrok-free.dev/Binger`
-- **Production:** TBD (will be configured later)
+- **Production:** `https://binger-backend.onrender.com/Binger`
 
 ## API Documentation
+
+### Development
 - **Swagger UI:** `https://zestfully-chalky-nikia.ngrok-free.dev/Binger/docs`
 - **ReDoc:** `https://zestfully-chalky-nikia.ngrok-free.dev/Binger/redoc`
+
+### Production  
+- **Swagger UI:** `https://binger-backend.onrender.com/Binger/docs`
+- **ReDoc:** `https://binger-backend.onrender.com/Binger/redoc`
 
 ---
 
