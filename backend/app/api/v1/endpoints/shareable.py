@@ -33,21 +33,27 @@ async def create_or_get_shareable_link(
 ):
     """
     Create a shareable link for the current user's watchlist.
-    If a link already exists, return it.
-    Each user can only have one shareable link.
+    If a link already exists (active or inactive), reactivate and return it.
+    This ensures users always get the same URL even after deletion/recreation.
     """
-    # Check if user already has a shareable link
+    # Check if user already has a shareable link (active or inactive)
     existing_link = db.query(ShareableLink).filter(
         ShareableLink.user_id == current_user.id
     ).first()
     
     if existing_link:
-        # Return existing link
+        # Reactivate if it was deactivated
+        if not existing_link.is_active:
+            existing_link.is_active = True
+            db.commit()
+            db.refresh(existing_link)
+        
+        # Return existing link (same URL every time)
         base_url = get_base_url(request)
         existing_link.shareable_url = f"{base_url}/shared/watchlist/{existing_link.token}"
         return existing_link
     
-    # Generate unique token
+    # Generate unique token (only for first-time creation)
     token = secrets.token_urlsafe(16)
     
     # Create new shareable link
@@ -98,7 +104,8 @@ async def delete_shareable_link(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Delete/revoke the current user's shareable link.
+    Revoke the current user's shareable link.
+    The link is deactivated but not deleted, so recreating it will return the same URL.
     """
     shareable_link = db.query(ShareableLink).filter(
         ShareableLink.user_id == current_user.id
@@ -107,12 +114,12 @@ async def delete_shareable_link(
     if not shareable_link:
         raise HTTPException(status_code=404, detail="No shareable link found")
     
-    # Delete the link
-    db.delete(shareable_link)
+    # Deactivate the link instead of deleting it
+    shareable_link.is_active = False
     db.commit()
     
     return {
-        "message": "Shareable link deleted successfully",
+        "message": "Shareable link revoked successfully. The same URL will be restored if you create a new link.",
         "success": True
     }
 
