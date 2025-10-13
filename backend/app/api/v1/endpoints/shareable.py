@@ -210,12 +210,18 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
         title = movie_data.get('title', 'Untitled')
         
         # Handle poster/image
-        poster = movie_data.get('poster', '') or movie_data.get('poster_path', '') or movie_data.get('image', '')
+        poster = (movie_data.get('posterUrl', '') or 
+                 movie_data.get('poster', '') or 
+                 movie_data.get('poster_path', '') or 
+                 movie_data.get('image', ''))
         if poster and not poster.startswith('http'):
             poster = f"https://image.tmdb.org/t/p/w500{poster}"
         
         # Handle description
-        description = movie_data.get('description', '') or movie_data.get('overview', '') or 'No description available'
+        description = (movie_data.get('synopsis', '') or 
+                      movie_data.get('description', '') or 
+                      movie_data.get('overview', '') or 
+                      'No description available')
         
         # Handle year/release date
         year = movie_data.get('year', '')
@@ -275,11 +281,4 @@ def generate_public_watchlist_html(user: User, watchlist_items: list) -> str:
     
     # Use the new sleek template
     return generate_sleek_watchlist_html(user_name, movies_json)
-            renderMovies();
-        </script>
-    </body>
-    </html>
-    """
-    
-    return html
 
