@@ -57,5 +57,5 @@ databases:
   - name: binger-db
     databaseName: binger
     user: binger_user
-    plan: free  # Change to 'starter' for $7/month (includes backups)
+    plan: starter  # $7/month (includes backups)
 
