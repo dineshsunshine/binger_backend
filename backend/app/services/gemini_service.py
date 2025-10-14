@@ -113,11 +113,11 @@ If no restaurants found, return: {{"restaurants": []}}
 Search now and return only valid JSON.
 """
             
-            # Call Gemini with grounding (internet search)
-            # Note: Gemini 2.0 Flash has built-in grounding capabilities
+            # Call Gemini with Google Search grounding (internet search)
+            # Using the correct 'google_search' tool for real-time web search
             response = self.model.generate_content(
                 search_prompt,
-                tools='google_search_retrieval'  # Enable internet search
+                tools=['google_search']  # Enable real-time internet search
             )
             
             # Extract response text
