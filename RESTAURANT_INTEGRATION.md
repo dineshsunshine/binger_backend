@@ -1,0 +1,565 @@
+# 🍽️ Restaurant Feature - Frontend Integration Guide
+
+## Overview
+
+The Binger backend now supports restaurant search and management, powered by OpenAI's GPT-4 with real-time web search. This guide covers all restaurant-related API endpoints.
+
+---
+
+## 🔑 Base URLs
+
+- **Production:** `https://binger-backend.onrender.com/Binger/api`
+- **Development:** `https://your-ngrok-url.ngrok-free.dev/Binger/api`
+
+---
+
+## 📍 API Endpoints
+
+### 1. Search Restaurants (OpenAI-Powered)
+
+Search for restaurants using AI with real-time web data.
+
+**Endpoint:** `POST /restaurants/search`  
+**Auth Required:** Yes  
+**Rate Limit:** Consider implementing debouncing (AI search can be slower)
+
+**Request:**
+```javascript
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/search', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    query: "Bla Bla Dubai"  // or "sushi restaurants in Tokyo", etc.
+  })
+});
+
+const data = await response.json();
+```
+
+**Response:**
+```json
+{
+  "restaurants": [
+    {
+      "id": "bla_bla_jbr_dubai",
+      "restaurant_name": "Bla Bla Dubai",
+      "description": "An expansive all-day social destination...",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=...",
+      "website": "https://blabladubai.ae/",
+      "menu_url": "https://blabladubai.ae/menus/",
+      "city": "Dubai",
+      "country": "United Arab Emirates",
+      "phone_number": "+971 4 584 4111",
+      "hours": {
+        "monday": "11:00 am – 12:00 am",
+        "tuesday": "11:00 am – 12:00 am",
+        "wednesday": "11:00 am – 12:00 am",
+        "thursday": "11:00 am – 12:00 am",
+        "friday": "11:00 am – 1:00 am",
+        "saturday": "11:00 am – 1:00 am",
+        "sunday": "11:00 am – 12:00 am",
+        "timezone": "Asia/Dubai"
+      },
+      "cuisine": "International / Fusion",
+      "type": "Beach Club / Restaurant / Nightlife Venue",
+      "drinks": {
+        "serves_alcohol": true,
+        "special_drinks": ["Signature cocktails", "Full bar"]
+      },
+      "diet_type": "mixed (veg / non-veg / vegan / gluten-free options)",
+      "social_media": {
+        "instagram": "blabladubai",
+        "facebook": "",
+        "twitter": "",
+        "tiktok": "",
+        "tripadvisor": "https://www.tripadvisor.com/..."
+      },
+      "known_for": [
+        "21 themed bars under one roof",
+        "Beach club with infinity pools",
+        "Live music & DJs"
+      ],
+      "images": [
+        "https://...",
+        "https://..."
+      ]
+    }
+  ]
+}
+```
+
+**Notes:**
+- Returns 0-5 restaurants per search
+- Empty array if no results found
+- Search is powered by OpenAI with web search, so results are up-to-date
+
+---
+
+### 2. Save a Restaurant
+
+Add a restaurant to the user's saved list.
+
+**Endpoint:** `POST /restaurants/saved`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/saved', {
+  method: 'POST',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    restaurant_data: {
+      id: "bla_bla_jbr_dubai",
+      restaurant_name: "Bla Bla Dubai",
+      // ... all restaurant fields from search result
+    },
+    visited: false,  // optional, default: false
+    personal_rating: 4,  // optional, 1-5
+    notes: "Want to try for anniversary",  // optional
+    tags: ["Anniversary", "Special Occasion"]  // optional
+  })
+});
+
+const data = await response.json();
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "restaurant_id": "bla_bla_jbr_dubai",
+  "restaurant_data": { /* full restaurant object */ },
+  "visited": false,
+  "personal_rating": 4,
+  "notes": "Want to try for anniversary",
+  "tags": ["Anniversary", "Special Occasion"],
+  "added_at": "2025-10-14T12:00:00Z",
+  "updated_at": "2025-10-14T12:00:00Z"
+}
+```
+
+**Error Responses:**
+- `400 Bad Request` - Restaurant already saved
+- `401 Unauthorized` - Invalid/missing token
+
+---
+
+### 3. Get Saved Restaurants
+
+Retrieve user's saved restaurants with optional filters and sorting.
+
+**Endpoint:** `GET /restaurants/saved`  
+**Auth Required:** Yes
+
+**Query Parameters:**
+- `sort_by` - `name`, `date_added`, `city`, `cuisine` (default: `date_added`)
+- `order` - `asc`, `desc` (default: `desc`)
+- `visited` - `true`, `false`, `all` (default: `all`)
+- `city` - Filter by city name (e.g., `Dubai`)
+- `cuisine` - Filter by cuisine type (e.g., `Japanese`)
+- `country` - Filter by country name (e.g., `UAE`)
+
+**Examples:**
+
+```javascript
+// Get all restaurants, most recently added first
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/saved', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+// Get only visited restaurants in Dubai
+const response = await fetch(
+  'https://binger-backend.onrender.com/Binger/api/restaurants/saved?visited=true&city=Dubai',
+  { headers: { 'Authorization': `Bearer ${token}` }}
+);
+
+// Get Japanese restaurants, sorted by name
+const response = await fetch(
+  'https://binger-backend.onrender.com/Binger/api/restaurants/saved?cuisine=Japanese&sort_by=name&order=asc',
+  { headers: { 'Authorization': `Bearer ${token}` }}
+);
+```
+
+**Response:**
+```json
+[
+  {
+    "id": "uuid",
+    "user_id": "uuid",
+    "restaurant_id": "bla_bla_jbr_dubai",
+    "restaurant_data": { /* full restaurant object */ },
+    "visited": false,
+    "personal_rating": 4,
+    "notes": "Want to try",
+    "tags": ["Anniversary"],
+    "added_at": "2025-10-14T12:00:00Z",
+    "updated_at": "2025-10-14T12:00:00Z"
+  }
+]
+```
+
+---
+
+### 4. Get Single Restaurant
+
+Get details of a specific saved restaurant.
+
+**Endpoint:** `GET /restaurants/saved/{restaurant_id}`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+const response = await fetch(
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  { headers: { 'Authorization': `Bearer ${token}` }}
+);
+```
+
+**Response:** Same as single restaurant object above
+
+**Error Responses:**
+- `404 Not Found` - Restaurant not in saved list
+
+---
+
+### 5. Update Saved Restaurant
+
+Update visit status, rating, notes, or tags.
+
+**Endpoint:** `PUT /restaurants/saved/{restaurant_id}`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+const response = await fetch(
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  {
+    method: 'PUT',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      visited: true,  // optional
+      personal_rating: 5,  // optional, 1-5
+      notes: "Loved it! Great ambiance",  // optional
+      tags: ["Anniversary", "Highly Recommended"]  // optional
+    })
+  }
+);
+```
+
+**Response:** Updated restaurant object
+
+**Note:** All fields are optional - only send what you want to update
+
+---
+
+### 6. Delete Saved Restaurant
+
+Remove a restaurant from saved list.
+
+**Endpoint:** `DELETE /restaurants/saved/{restaurant_id}`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+await fetch(
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  {
+    method: 'DELETE',
+    headers: { 'Authorization': `Bearer ${token}` }
+  }
+);
+```
+
+**Response:** `204 No Content` (success)
+
+---
+
+## 🔗 Shareable Restaurant List
+
+### 7. Create Shareable Link
+
+Generate a public shareable link for user's restaurant list.
+
+**Endpoint:** `POST /restaurants/shareable-link`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+const response = await fetch(
+  'https://binger-backend.onrender.com/Binger/api/restaurants/shareable-link',
+  {
+    method: 'POST',
+    headers: {
+      'Authorization': `Bearer ${token}`,
+      'Content-Type': 'application/json'
+    }
+  }
+);
+
+const data = await response.json();
+```
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "token": "unique-token",
+  "shareable_url": "https://binger-backend.onrender.com/Binger/shared/restaurants/unique-token",
+  "is_active": true,
+  "created_at": "2025-10-14T12:00:00Z",
+  "updated_at": "2025-10-14T12:00:00Z"
+}
+```
+
+**Key Points:**
+- ✅ One link per user
+- ✅ Same URL returned if link already exists (even after delete/recreate)
+- ✅ Public - no auth required to view
+
+---
+
+### 8. Get Existing Shareable Link
+
+**Endpoint:** `GET /restaurants/shareable-link`  
+**Auth Required:** Yes
+
+Returns existing link or `null` if none exists.
+
+---
+
+### 9. Revoke Shareable Link
+
+**Endpoint:** `DELETE /restaurants/shareable-link`  
+**Auth Required:** Yes
+
+Deactivates the link (same URL will be restored if recreated later).
+
+---
+
+## 🎨 UI/UX Recommendations
+
+### Restaurant Search Flow
+1. **Search Box** - Let users type restaurant names or queries
+2. **Loading State** - Show "Searching with AI..." (can take 2-5 seconds)
+3. **Results Display** - Show 0-5 restaurants in cards
+4. **Save Button** - "+ Save" button on each result
+5. **Empty State** - "No restaurants found. Try a different search."
+
+### Restaurant Card Design
+Display key info:
+- Restaurant name (bold, large)
+- Cuisine type & city
+- Star rating (if user rated it)
+- Visited badge (if visited)
+- Quick actions: View Details, Mark as Visited, Delete
+
+### Restaurant Detail View
+Full information including:
+- All hours (expandable)
+- Clickable links: Google Maps, Website, Menu
+- Social media buttons
+- Known for highlights
+- Personal notes section
+- Tags display
+- Visit checkbox
+- Rating (1-5 stars)
+
+### Filters & Sorting
+- Tabs: All / To Visit / Visited
+- Sort dropdown: Recently Added, Name (A-Z), City, Cuisine
+- Filter by: City, Cuisine, Country
+
+---
+
+## 📊 Data Fields Reference
+
+### Required Fields (Always Present)
+- `id` - Unique identifier
+- `restaurant_name` - Name of restaurant
+
+### Optional Fields
+All other fields may be `null` or empty string. Always check before displaying:
+
+```javascript
+// Safe access example
+const city = restaurant.restaurant_data.city || "Unknown City";
+const website = restaurant.restaurant_data.website;
+
+if (website) {
+  // Show website link
+}
+```
+
+---
+
+## 🚨 Error Handling
+
+```javascript
+try {
+  const response = await fetch(url, options);
+  
+  if (!response.ok) {
+    if (response.status === 401) {
+      // Redirect to login
+    } else if (response.status === 400) {
+      const error = await response.json();
+      alert(error.detail);  // "Restaurant already saved"
+    } else if (response.status === 404) {
+      alert("Restaurant not found");
+    } else {
+      alert("Something went wrong. Please try again.");
+    }
+    return;
+  }
+  
+  const data = await response.json();
+  // Handle success
+  
+} catch (error) {
+  console.error("Network error:", error);
+  alert("Network error. Please check your connection.");
+}
+```
+
+---
+
+## 💡 Implementation Tips
+
+### 1. Debounce Search Input
+```javascript
+// Wait 500ms after user stops typing before searching
+const debouncedSearch = debounce((query) => {
+  searchRestaurants(query);
+}, 500);
+```
+
+### 2. Cache Search Results
+Store recent searches to avoid duplicate AI calls:
+```javascript
+const searchCache = new Map();
+
+async function searchRestaurants(query) {
+  if (searchCache.has(query)) {
+    return searchCache.get(query);
+  }
+  
+  const results = await fetch(/*...*/);
+  searchCache.set(query, results);
+  return results;
+}
+```
+
+### 3. Optimistic UI Updates
+Update UI immediately, rollback if API fails:
+```javascript
+// Mark as visited immediately
+setRestaurant(prev => ({ ...prev, visited: true }));
+
+try {
+  await updateRestaurant(id, { visited: true });
+} catch (error) {
+  // Rollback on error
+  setRestaurant(prev => ({ ...prev, visited: false }));
+}
+```
+
+---
+
+## 🔄 State Management Example (React)
+
+```javascript
+// Context or Redux store
+const RestaurantContext = {
+  savedRestaurants: [],
+  searchResults: [],
+  isSearching: false,
+  shareableLink: null
+};
+
+// Actions
+async function searchRestaurants(query) {
+  setIsSearching(true);
+  try {
+    const results = await api.searchRestaurants(query);
+    setSearchResults(results.restaurants);
+  } catch (error) {
+    handleError(error);
+  } finally {
+    setIsSearching(false);
+  }
+}
+
+async function saveRestaurant(restaurant) {
+  try {
+    const saved = await api.saveRestaurant(restaurant);
+    setSavedRestaurants(prev => [saved, ...prev]);
+    toast.success("Restaurant saved!");
+  } catch (error) {
+    if (error.status === 400) {
+      toast.error("Already saved!");
+    }
+  }
+}
+```
+
+---
+
+## 🌐 Public Shareable Page
+
+The shareable link (`/shared/restaurants/{token}`) displays:
+- ✅ User's name (e.g., "Dinesh's Restaurants")
+- ✅ All saved restaurants (public view)
+- ✅ Filters: All, Visited, To Visit
+- ✅ Sort options
+- ✅ Beautiful, responsive UI
+- ✅ No login required
+
+---
+
+## 📝 Notes
+
+1. **OpenAI Search** - Results may vary based on AI model's web search. Always handle empty results gracefully.
+2. **Personal Data** - `visited`, `personal_rating`, `notes`, and `tags` are user-specific and private.
+3. **Restaurant IDs** - Generated by OpenAI. Same restaurant might have slightly different IDs in different searches.
+4. **Duplicate Prevention** - Backend prevents saving same `restaurant_id` twice per user.
+
+---
+
+## 🎯 Quick Start Checklist
+
+- [ ] Implement restaurant search UI
+- [ ] Display search results in cards
+- [ ] Add "Save" functionality
+- [ ] Create saved restaurants list view
+- [ ] Add filters and sorting
+- [ ] Implement mark as visited
+- [ ] Add rating system (1-5 stars)
+- [ ] Create detail view with all info
+- [ ] Add shareable link generation
+- [ ] Handle all error states
+- [ ] Add loading states
+
+---
+
+## 🆘 Support
+
+For issues or questions:
+- Check API docs: `https://binger-backend.onrender.com/Binger/docs`
+- Logs: Check browser console and network tab
+- Backend issues: Contact backend team
+
+---
+
+**Happy Coding! 🚀**
+
