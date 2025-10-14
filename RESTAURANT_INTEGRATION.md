@@ -47,9 +47,11 @@ Search for restaurants using AI (OpenAI), Foursquare Places API, or a hybrid com
 **Rate Limit:** Consider implementing debouncing for hybrid/OpenAI modes
 
 **Search Modes:**
-- **Mode 1 (OpenAI only):** Intelligent AI search, may have placeholder images
-- **Mode 2 (Foursquare only):** Real restaurant data with high-quality photos, faster
-- **Mode 3 (Hybrid - RECOMMENDED):** Combines OpenAI intelligence with Foursquare photos for best results
+- **Mode 1 (OpenAI only - CURRENTLY WORKING):** Intelligent AI search, may have placeholder images
+- **Mode 2 (Foursquare only):** Real restaurant data with high-quality photos, faster ⚠️ *Currently unavailable - invalid API key*
+- **Mode 3 (Hybrid):** Combines OpenAI intelligence with Foursquare photos ⚠️ *Falls back to Mode 1 if Foursquare unavailable*
+
+**Current Recommendation:** Use **Mode 1** until valid Foursquare v3 API key is obtained.
 
 **Request Body:**
 ```json
@@ -76,7 +78,7 @@ const response = await fetch('https://binger-backend.onrender.com/Binger/api/res
   body: JSON.stringify({
     query: "Bla Bla",
     location: "Dubai",
-    mode: 3  // Hybrid: best of both worlds
+    mode: 1  // OpenAI only - WORKING NOW!
   })
 });
 
@@ -92,7 +94,8 @@ const data = await response.json();
 | Speed | ⚠️ 3-8 seconds | ✅ Fast (~1-2 seconds) | ⚠️ 4-10 seconds |
 | Data Accuracy | ✅ Good | ✅ Excellent | ✅ Best |
 | Unique Restaurants | ✅ Can find obscure places | ⚠️ Only Foursquare database | ✅ Comprehensive |
-| **Recommended For** | Finding specific restaurants | Quick browsing with photos | Best overall experience |
+| **Current Status** | ✅ **WORKING** | ❌ Invalid API key | ⚠️ Falls back to Mode 1 |
+| **Recommended For** | **All searches (for now)** | Quick browsing with photos | Best overall experience |
 
 **Response:**
 ```json
