@@ -37,7 +37,7 @@ services:
       - key: OPENAI_API_KEY
         sync: false
       
-      - key: FOURSQUARE_API_KEY
+      - key: GEMINI_API_KEY
         sync: false
       
       - key: JWT_ALGORITHM
