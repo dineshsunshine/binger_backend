@@ -6,6 +6,21 @@ The Binger backend now supports restaurant search and management, powered by Ope
 
 ---
 
+## ⚠️ Important Notes
+
+### OpenAI Search Performance
+- **Response Time:** Restaurant search uses OpenAI's API with web search, which can take **3-8 seconds** depending on query complexity
+- **User Experience:** Always show a loading state with a message like "Searching with AI..." or "Finding restaurants..."
+- **Best Practice:** Implement debouncing (wait 500ms after user stops typing before searching) to avoid excessive API calls
+- **Error Handling:** OpenAI may occasionally fail or timeout - handle these gracefully with retry options
+
+### Shareable Links
+- Restaurant shareable links are **unified** with movie shareable links
+- Use `/api/shareable-link` with `entity_types` parameter (not `/api/restaurants/shareable-link`)
+- One link per user can show movies, restaurants, or both
+
+---
+
 ## 🔑 Base URLs
 
 - **Production:** `https://binger-backend.onrender.com/Binger/api`
@@ -284,25 +299,42 @@ await fetch(
 
 ---
 
-## 🔗 Shareable Restaurant List
+## 🔗 Shareable Links (Unified for Movies & Restaurants)
 
-### 7. Create Shareable Link
+> **Important:** Shareable links are now **unified** for both movies and restaurants. You use the same `/api/shareable-link` endpoint with an `entity_types` parameter to control what's shown (movies, restaurants, or both).
 
-Generate a public shareable link for user's restaurant list.
+### 7. Create or Update Shareable Link
 
-**Endpoint:** `POST /restaurants/shareable-link`  
+Generate a public shareable link for user's list. You can specify what to share: movies, restaurants, or both.
+
+**Endpoint:** `POST /api/shareable-link`  
 **Auth Required:** Yes
 
-**Request:**
+**Request Body:**
+```json
+{
+  "entity_types": ["movies", "restaurants"]
+}
+```
+
+Options for `entity_types`:
+- `["movies"]` - Share only movies
+- `["restaurants"]` - Share only restaurants  
+- `["movies", "restaurants"]` - Share both (default)
+
+**Request Example:**
 ```javascript
 const response = await fetch(
-  'https://binger-backend.onrender.com/Binger/api/restaurants/shareable-link',
+  'https://binger-backend.onrender.com/Binger/api/shareable-link',
   {
     method: 'POST',
     headers: {
       'Authorization': `Bearer ${token}`,
       'Content-Type': 'application/json'
-    }
+    },
+    body: JSON.stringify({
+      entity_types: ["restaurants"]  // Or ["movies"] or ["movies", "restaurants"]
+    })
   }
 );
 
@@ -315,7 +347,8 @@ const data = await response.json();
   "id": "uuid",
   "user_id": "uuid",
   "token": "unique-token",
-  "shareable_url": "https://binger-backend.onrender.com/Binger/shared/restaurants/unique-token",
+  "entity_types": ["restaurants"],
+  "shareable_url": "https://binger-backend.onrender.com/Binger/shared/watchlist/unique-token",
   "is_active": true,
   "created_at": "2025-10-14T12:00:00Z",
   "updated_at": "2025-10-14T12:00:00Z"
@@ -323,27 +356,74 @@ const data = await response.json();
 ```
 
 **Key Points:**
-- ✅ One link per user
+- ✅ One link per user (shared for both movies and restaurants)
 - ✅ Same URL returned if link already exists (even after delete/recreate)
+- ✅ You can update `entity_types` anytime to change what's visible
 - ✅ Public - no auth required to view
+- ✅ The public page will show separate sections for movies and restaurants
 
 ---
 
-### 8. Get Existing Shareable Link
+### 8. Update What's Shared
 
-**Endpoint:** `GET /restaurants/shareable-link`  
+Change which entities are shown in the shareable link without creating a new URL.
+
+**Endpoint:** `PUT /api/shareable-link`  
 **Auth Required:** Yes
 
-Returns existing link or `null` if none exists.
+**Request Example:**
+```javascript
+await fetch('https://binger-backend.onrender.com/Binger/api/shareable-link', {
+  method: 'PUT',
+  headers: {
+    'Authorization': `Bearer ${token}`,
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify({
+    entity_types: ["movies", "restaurants"]  // Now show both
+  })
+});
+```
 
 ---
 
-### 9. Revoke Shareable Link
+### 9. Get Existing Shareable Link
 
-**Endpoint:** `DELETE /restaurants/shareable-link`  
+**Endpoint:** `GET /api/shareable-link`  
+**Auth Required:** Yes
+
+Returns existing link with current `entity_types` or `null` if none exists.
+
+**Response:**
+```json
+{
+  "id": "uuid",
+  "user_id": "uuid",
+  "token": "unique-token",
+  "entity_types": ["movies", "restaurants"],
+  "shareable_url": "https://binger-backend.onrender.com/Binger/shared/watchlist/unique-token",
+  "is_active": true,
+  "created_at": "2025-10-14T12:00:00Z",
+  "updated_at": "2025-10-14T12:00:00Z"
+}
+```
+
+---
+
+### 10. Revoke Shareable Link
+
+**Endpoint:** `DELETE /api/shareable-link`  
 **Auth Required:** Yes
 
 Deactivates the link (same URL will be restored if recreated later).
+
+**Response:**
+```json
+{
+  "message": "Shareable link revoked successfully. The same URL will be restored if you create a new link.",
+  "success": true
+}
+```
 
 ---
 
