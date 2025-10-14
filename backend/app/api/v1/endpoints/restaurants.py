@@ -19,7 +19,7 @@ from ....schemas.restaurant import (
     SavedRestaurantResponse
 )
 from ....services.openai_service import OpenAIRestaurantService
-from ....services.foursquare_service import FoursquareRestaurantService
+from ....services.gemini_service import GeminiRestaurantService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -32,12 +32,12 @@ async def search_restaurants(
     current_user: User = Depends(get_current_user)
 ):
     """
-    Search for restaurants using OpenAI, Foursquare, or both (hybrid).
+    Search for restaurants using OpenAI, Google Gemini, or both (hybrid).
     
     Search Modes:
-    - mode=1: OpenAI only (intelligent search with web data, may have placeholder images)
-    - mode=2: Foursquare only (real restaurant data with photos, faster)
-    - mode=3: Hybrid (combines OpenAI intelligence with Foursquare photos - RECOMMENDED)
+    - mode=1: OpenAI only (intelligent search, may have placeholder images)
+    - mode=2: Google Gemini Flash 2.5 with internet search (real-time data with photos)
+    - mode=3: Hybrid (combines both OpenAI and Gemini results - RECOMMENDED)
     
     Returns array of 0-5 matching restaurants in the specified location.
     """
@@ -50,22 +50,22 @@ async def search_restaurants(
             openai_service = OpenAIRestaurantService()
             restaurants = openai_service.search_restaurants(request.query, request.location)
         
-        # Mode 2: Foursquare only
+        # Mode 2: Google Gemini only
         elif request.mode == 2:
-            logger.info(f"Using Foursquare search for: {request.query} in {request.location}")
-            foursquare_service = FoursquareRestaurantService()
-            restaurants = foursquare_service.search_restaurants(request.query, request.location)
+            logger.info(f"Using Gemini search for: {request.query} in {request.location}")
+            gemini_service = GeminiRestaurantService()
+            restaurants = gemini_service.search_restaurants(request.query, request.location)
         
-        # Mode 3: Hybrid (OpenAI + Foursquare)
+        # Mode 3: Hybrid (OpenAI + Gemini)
         elif request.mode == 3:
             logger.info(f"Using Hybrid search for: {request.query} in {request.location}")
             
             # Get results from both services
             openai_service = OpenAIRestaurantService()
-            foursquare_service = FoursquareRestaurantService()
+            gemini_service = GeminiRestaurantService()
             
             openai_restaurants = []
-            foursquare_restaurants = []
+            gemini_restaurants = []
             
             try:
                 openai_restaurants = openai_service.search_restaurants(request.query, request.location)
@@ -73,12 +73,12 @@ async def search_restaurants(
                 logger.warning(f"OpenAI search failed in hybrid mode: {str(e)}")
             
             try:
-                foursquare_restaurants = foursquare_service.search_restaurants(request.query, request.location)
+                gemini_restaurants = gemini_service.search_restaurants(request.query, request.location)
             except Exception as e:
-                logger.warning(f"Foursquare search failed in hybrid mode: {str(e)}")
+                logger.warning(f"Gemini search failed in hybrid mode: {str(e)}")
             
-            # Merge results: Prioritize Foursquare for real photos, supplement with OpenAI
-            restaurants = _merge_restaurant_results(openai_restaurants, foursquare_restaurants)
+            # Merge results: Prioritize Gemini for real-time data with photos, supplement with OpenAI
+            restaurants = _merge_restaurant_results(openai_restaurants, gemini_restaurants)
         
         return RestaurantSearchResponse(restaurants=restaurants)
     
@@ -87,16 +87,16 @@ async def search_restaurants(
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
 
 
-def _merge_restaurant_results(openai_results: List[dict], foursquare_results: List[dict]) -> List[dict]:
+def _merge_restaurant_results(openai_results: List[dict], gemini_results: List[dict]) -> List[dict]:
     """
-    Merge OpenAI and Foursquare results intelligently.
-    Strategy: Use Foursquare results (with real photos) and supplement with OpenAI if needed.
+    Merge OpenAI and Gemini results intelligently.
+    Strategy: Use Gemini results (with real-time web data and photos) and supplement with OpenAI if needed.
     """
     merged = []
     
-    # Start with Foursquare results (they have real photos)
-    for fs_restaurant in foursquare_results:
-        merged.append(fs_restaurant)
+    # Start with Gemini results (they have real-time web data and photos)
+    for gemini_restaurant in gemini_results:
+        merged.append(gemini_restaurant)
     
     # Add OpenAI results that don't overlap (name/location similarity check)
     for ai_restaurant in openai_results:

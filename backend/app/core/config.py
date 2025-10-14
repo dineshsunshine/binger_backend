@@ -31,8 +31,8 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     OPENAI_MODEL: str = "gpt-4o"  # or gpt-4o-mini for faster/cheaper responses
     
-    # Foursquare (for restaurant search with photos)
-    FOURSQUARE_API_KEY: str
+    # Google Gemini (for restaurant search with internet search)
+    GEMINI_API_KEY: str
     
     RESTAURANT_SEARCH_SYSTEM_PROMPT: str = """You are a restaurant information expert with real-time web search capabilities.
 

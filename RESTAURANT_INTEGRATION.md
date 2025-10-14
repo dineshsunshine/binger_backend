@@ -38,20 +38,20 @@ The Binger backend now supports restaurant search and management, powered by Ope
 
 ## 📍 API Endpoints
 
-### 1. Search Restaurants (Multi-Mode: OpenAI, Foursquare, or Hybrid)
+### 1. Search Restaurants (Multi-Mode: OpenAI, Gemini, or Hybrid)
 
-Search for restaurants using AI (OpenAI), Foursquare Places API, or a hybrid combination of both.
+Search for restaurants using AI (OpenAI), Google Gemini Flash 2.5 with internet search, or a hybrid combination of both.
 
 **Endpoint:** `POST /restaurants/search`  
 **Auth Required:** Yes  
 **Rate Limit:** Consider implementing debouncing for hybrid/OpenAI modes
 
 **Search Modes:**
-- **Mode 1 (OpenAI only - CURRENTLY WORKING):** Intelligent AI search, may have placeholder images
-- **Mode 2 (Foursquare only):** Real restaurant data with high-quality photos, faster ⚠️ *Currently unavailable - invalid API key*
-- **Mode 3 (Hybrid):** Combines OpenAI intelligence with Foursquare photos ⚠️ *Falls back to Mode 1 if Foursquare unavailable*
+- **Mode 1 (OpenAI only):** Intelligent AI search, may have placeholder images
+- **Mode 2 (Google Gemini Flash 2.5):** Real-time internet search with high-quality photos ✨ **NEW!**
+- **Mode 3 (Hybrid - RECOMMENDED):** Combines OpenAI intelligence with Gemini's real-time web data and photos
 
-**Current Recommendation:** Use **Mode 1** until valid Foursquare v3 API key is obtained.
+**Current Recommendation:** Use **Mode 3 (Hybrid)** for best results with real photos!
 
 **Request Body:**
 ```json
@@ -65,7 +65,7 @@ Search for restaurants using AI (OpenAI), Foursquare Places API, or a hybrid com
 **Parameters:**
 - `query` (required): Restaurant name or search query (e.g., "Bla Bla", "best sushi", "Italian restaurant")
 - `location` (required): City or location to search in (e.g., "Dubai", "New York", "Tokyo")
-- `mode` (optional, default=3): Search mode (1=OpenAI, 2=Foursquare, 3=Hybrid)
+- `mode` (optional, default=3): Search mode (1=OpenAI, 2=Gemini, 3=Hybrid - RECOMMENDED)
 
 **Request Example (Hybrid Mode - Recommended):**
 ```javascript
@@ -78,7 +78,7 @@ const response = await fetch('https://binger-backend.onrender.com/Binger/api/res
   body: JSON.stringify({
     query: "Bla Bla",
     location: "Dubai",
-    mode: 1  // OpenAI only - WORKING NOW!
+    mode: 3  // Hybrid: Best results with real photos!
   })
 });
 
@@ -87,15 +87,15 @@ const data = await response.json();
 
 **Mode Comparison:**
 
-| Feature | Mode 1 (OpenAI) | Mode 2 (Foursquare) | Mode 3 (Hybrid) |
-|---------|-----------------|---------------------|-----------------|
-| Real Photos | ❌ May be placeholders | ✅ High-quality real photos | ✅ Foursquare photos prioritized |
-| Search Intelligence | ✅ Very smart AI | ⚠️ Basic keyword search | ✅ AI + Real data |
-| Speed | ⚠️ 3-8 seconds | ✅ Fast (~1-2 seconds) | ⚠️ 4-10 seconds |
-| Data Accuracy | ✅ Good | ✅ Excellent | ✅ Best |
-| Unique Restaurants | ✅ Can find obscure places | ⚠️ Only Foursquare database | ✅ Comprehensive |
-| **Current Status** | ✅ **WORKING** | ❌ Invalid API key | ⚠️ Falls back to Mode 1 |
-| **Recommended For** | **All searches (for now)** | Quick browsing with photos | Best overall experience |
+| Feature | Mode 1 (OpenAI) | Mode 2 (Gemini Flash 2.5) | Mode 3 (Hybrid) |
+|---------|-----------------|---------------------------|-----------------|
+| Real Photos | ❌ May be placeholders | ✅ High-quality real photos | ✅ Gemini photos prioritized |
+| Search Intelligence | ✅ Very smart AI | ✅ Very smart AI + Real-time web | ✅ Best of both |
+| Internet Search | ❌ Limited | ✅ Real-time web search | ✅ Real-time web search |
+| Speed | ⚠️ 3-8 seconds | ⚠️ 3-6 seconds | ⚠️ 4-10 seconds |
+| Data Accuracy | ✅ Good | ✅ Excellent (real-time) | ✅ Best |
+| Unique Restaurants | ✅ Can find obscure places | ✅ Real-time search | ✅ Most comprehensive |
+| **Recommended For** | Basic searches | Real-time data needs | **Best overall experience** |
 
 **Response:**
 ```json
