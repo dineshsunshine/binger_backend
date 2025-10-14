@@ -20,7 +20,7 @@ class GeminiRestaurantService:
                 "top_p": 0.95,
                 "top_k": 40,
                 "max_output_tokens": 8192,
-                "response_mime_type": "application/json",
+                # Note: response_mime_type cannot be used with google_search_retrieval
             }
         )
     
