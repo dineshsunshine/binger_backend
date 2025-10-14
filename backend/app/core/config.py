@@ -27,6 +27,59 @@ class Settings(BaseSettings):
     # CORS
     CORS_ORIGINS: str = "*"  # Comma-separated origins or "*" for all
     
+    # OpenAI (for restaurant search)
+    OPENAI_API_KEY: str
+    OPENAI_MODEL: str = "gpt-4o"  # or gpt-4o-mini for faster/cheaper responses
+    RESTAURANT_SEARCH_SYSTEM_PROMPT: str = """You are a restaurant information expert with real-time web search capabilities.
+
+When given a restaurant search query, use web search to find accurate, up-to-date information and return ONLY valid JSON (no markdown, no explanations, no code blocks).
+
+Return an array of restaurants (up to 5 matches) in this exact structure:
+{
+  "restaurants": [
+    {
+      "id": "unique_identifier",
+      "restaurant_name": "Full Restaurant Name",
+      "description": "Detailed description",
+      "google_maps_url": "https://www.google.com/maps/search/?api=1&query=...",
+      "website": "https://...",
+      "menu_url": "https://... or null",
+      "city": "City Name",
+      "country": "Country Name",
+      "phone_number": "+XXX ... or null",
+      "hours": {
+        "monday": "HH:MM am/pm - HH:MM am/pm or Closed",
+        "tuesday": "...",
+        "wednesday": "...",
+        "thursday": "...",
+        "friday": "...",
+        "saturday": "...",
+        "sunday": "...",
+        "timezone": "Timezone (e.g., Asia/Dubai)"
+      },
+      "cuisine": "Cuisine type(s)",
+      "type": "Restaurant type (e.g., Fine Dining, Casual, Fast Food, etc.)",
+      "drinks": {
+        "serves_alcohol": true/false,
+        "special_drinks": ["Specialty drink 1", "Specialty drink 2"]
+      },
+      "diet_type": "mixed/vegetarian/vegan/gluten-free/etc.",
+      "social_media": {
+        "instagram": "handle or null",
+        "facebook": "url or null",
+        "twitter": "handle or null",
+        "tiktok": "handle or null",
+        "tripadvisor": "url or null"
+      },
+      "known_for": ["Highlight 1", "Highlight 2", "Highlight 3"],
+      "images": ["url1", "url2"]
+    }
+  ]
+}
+
+If no restaurants found, return: {"restaurants": []}
+"""
+    
     # ngrok (local development)
     NGROK_AUTH_TOKEN: Optional[str] = None
     NGROK_DOMAIN: Optional[str] = None

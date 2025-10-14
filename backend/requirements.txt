@@ -14,6 +14,9 @@ pyjwt==2.10.1
 google-auth==2.37.0
 requests==2.32.3
 
+# AI/ML
+openai==1.54.5  # For restaurant search with web search
+
 # Settings management
 pydantic==2.10.6
 pydantic-settings==2.7.1

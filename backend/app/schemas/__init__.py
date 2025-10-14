@@ -6,6 +6,16 @@ from .user import UserResponse
 from .watchlist import MovieSchema, WatchlistResponse, WatchlistUpdateRequest
 from .settings import AppSettings
 from .shareable_link import ShareableLinkResponse, ShareableLinkDelete
+from .restaurant import (
+    RestaurantSearchRequest,
+    RestaurantSearchResponse,
+    RestaurantData,
+    SaveRestaurantRequest,
+    UpdateSavedRestaurantRequest,
+    SavedRestaurantResponse,
+    RestaurantShareableLinkResponse,
+    RestaurantShareableLinkDelete
+)
 
 __all__ = [
     "GoogleAuthRequest",
@@ -16,6 +26,14 @@ __all__ = [
     "WatchlistUpdateRequest",
     "AppSettings",
     "ShareableLinkResponse",
-    "ShareableLinkDelete"
+    "ShareableLinkDelete",
+    "RestaurantSearchRequest",
+    "RestaurantSearchResponse",
+    "RestaurantData",
+    "SaveRestaurantRequest",
+    "UpdateSavedRestaurantRequest",
+    "SavedRestaurantResponse",
+    "RestaurantShareableLinkResponse",
+    "RestaurantShareableLinkDelete"
 ]
 

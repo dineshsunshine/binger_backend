@@ -22,4 +22,5 @@ class User(Base):
     # Relationships
     watchlist_items = relationship("WatchlistItem", back_populates="user", cascade="all, delete-orphan")
     settings = relationship("UserSetting", back_populates="user", uselist=False, cascade="all, delete-orphan")
+    saved_restaurants = relationship("SavedRestaurant", back_populates="user", cascade="all, delete-orphan")
 
