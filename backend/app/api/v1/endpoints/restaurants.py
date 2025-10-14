@@ -82,11 +82,27 @@ async def save_restaurant(
     return saved_restaurant
 
 
+@router.get("/saved/ids", response_model=List[str])
+async def get_saved_restaurant_ids(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Get list of saved restaurant IDs for the current user.
+    Useful for checking which restaurants are already saved.
+    """
+    saved_restaurants = db.query(SavedRestaurant.restaurant_id).filter(
+        SavedRestaurant.user_id == current_user.id
+    ).all()
+    
+    return [r.restaurant_id for r in saved_restaurants]
+
+
 @router.get("/saved", response_model=List[SavedRestaurantResponse])
 async def get_saved_restaurants(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
-    sort_by: str = Query("date_added", regex="^(name|date_added|city|cuisine)$"),
+    sort_by: str = Query("added_at", regex="^(name|added_at|city|cuisine)$"),
     order: str = Query("desc", regex="^(asc|desc)$"),
     visited: Optional[str] = Query(None, regex="^(true|false|all)$"),
     city: Optional[str] = None,
@@ -97,7 +113,7 @@ async def get_saved_restaurants(
     Get user's saved restaurants with filters and sorting.
     
     Query parameters:
-    - sort_by: name, date_added, city, cuisine (default: date_added)
+    - sort_by: name, added_at, city, cuisine (default: added_at)
     - order: asc, desc (default: desc)
     - visited: true, false, all (default: all)
     - city: filter by city name
@@ -134,7 +150,7 @@ async def get_saved_restaurants(
     elif sort_by == "cuisine":
         results.sort(key=lambda x: x.restaurant_data.get('cuisine', '').lower(), 
                     reverse=(order == "desc"))
-    else:  # date_added
+    else:  # added_at
         results.sort(key=lambda x: x.added_at, reverse=(order == "desc"))
     
     return results

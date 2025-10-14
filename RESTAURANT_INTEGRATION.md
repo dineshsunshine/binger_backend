@@ -179,7 +179,35 @@ const data = await response.json();
 
 ---
 
-### 3. Get Saved Restaurants
+### 3. Get Saved Restaurant IDs
+
+Get a list of restaurant IDs that the user has already saved. Useful for checking which restaurants are already in the saved list.
+
+**Endpoint:** `GET /restaurants/saved/ids`  
+**Auth Required:** Yes
+
+**Request:**
+```javascript
+const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/saved/ids', {
+  headers: { 'Authorization': `Bearer ${token}` }
+});
+
+const data = await response.json();
+// Returns: ["bla_bla_jbr_dubai", "kailash_parbat_mumbai", ...]
+```
+
+**Response:**
+```json
+[
+  "bla_bla_jbr_dubai",
+  "kailash_parbat_mumbai",
+  "another_restaurant_id"
+]
+```
+
+---
+
+### 4. Get Saved Restaurants
 
 Retrieve user's saved restaurants with optional filters and sorting.
 
@@ -187,7 +215,7 @@ Retrieve user's saved restaurants with optional filters and sorting.
 **Auth Required:** Yes
 
 **Query Parameters:**
-- `sort_by` - `name`, `date_added`, `city`, `cuisine` (default: `date_added`)
+- `sort_by` - `name`, `added_at`, `city`, `cuisine` (default: `added_at`)
 - `order` - `asc`, `desc` (default: `desc`)
 - `visited` - `true`, `false`, `all` (default: `all`)
 - `city` - Filter by city name (e.g., `Dubai`)
@@ -235,7 +263,7 @@ const response = await fetch(
 
 ---
 
-### 4. Get Single Restaurant
+### 5. Get Single Restaurant
 
 Get details of a specific saved restaurant.
 
@@ -257,7 +285,7 @@ const response = await fetch(
 
 ---
 
-### 5. Update Saved Restaurant
+### 6. Update Saved Restaurant
 
 Update visit status, rating, notes, or tags.
 
@@ -290,7 +318,7 @@ const response = await fetch(
 
 ---
 
-### 6. Delete Saved Restaurant
+### 7. Delete Saved Restaurant
 
 Remove a restaurant from saved list.
 
