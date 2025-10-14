@@ -101,24 +101,3 @@ class SavedRestaurantResponse(BaseModel):
     class Config:
         from_attributes = True
 
-
-# Shareable Links
-class RestaurantShareableLinkResponse(BaseModel):
-    """Response for restaurant shareable link."""
-    id: str
-    user_id: str
-    token: str
-    shareable_url: Optional[str] = None
-    is_active: bool
-    created_at: datetime
-    updated_at: datetime
-    
-    class Config:
-        from_attributes = True
-
-
-class RestaurantShareableLinkDelete(BaseModel):
-    """Response after deleting shareable link."""
-    message: str
-    success: bool
-

@@ -14,7 +14,12 @@ from ....core.auth import get_current_user
 from ....models.user import User
 from ....models.shareable_link import ShareableLink
 from ....models.watchlist import WatchlistItem
-from ....schemas.shareable_link import ShareableLinkResponse, ShareableLinkDelete
+from ....schemas.shareable_link import (
+    ShareableLinkResponse, 
+    ShareableLinkDelete, 
+    ShareableLinkCreate,
+    ShareableLinkUpdate
+)
 
 router = APIRouter()
 
@@ -27,14 +32,17 @@ def get_base_url(request: Request) -> str:
 
 @router.post("/shareable-link", response_model=ShareableLinkResponse)
 async def create_or_get_shareable_link(
+    link_data: ShareableLinkCreate,
     request: Request,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """
-    Create a shareable link for the current user's watchlist.
-    If a link already exists (active or inactive), reactivate and return it.
+    Create a shareable link for the current user's watchlist and/or restaurants.
+    If a link already exists (active or inactive), reactivate and update entity_types.
     This ensures users always get the same URL even after deletion/recreation.
+    
+    entity_types: ["movies"], ["restaurants"], or ["movies", "restaurants"]
     """
     # Check if user already has a shareable link (active or inactive)
     existing_link = db.query(ShareableLink).filter(
@@ -45,8 +53,12 @@ async def create_or_get_shareable_link(
         # Reactivate if it was deactivated
         if not existing_link.is_active:
             existing_link.is_active = True
-            db.commit()
-            db.refresh(existing_link)
+        
+        # Update entity_types
+        existing_link.entity_types = link_data.entity_types
+        
+        db.commit()
+        db.refresh(existing_link)
         
         # Return existing link (same URL every time)
         base_url = get_base_url(request)
@@ -60,6 +72,7 @@ async def create_or_get_shareable_link(
     shareable_link = ShareableLink(
         user_id=current_user.id,
         token=token,
+        entity_types=link_data.entity_types,
         is_active=True
     )
     
@@ -90,6 +103,37 @@ async def get_shareable_link(
     
     if not shareable_link:
         return None
+    
+    # Add shareable URL
+    base_url = get_base_url(request)
+    shareable_link.shareable_url = f"{base_url}/shared/watchlist/{shareable_link.token}"
+    
+    return shareable_link
+
+
+@router.put("/shareable-link", response_model=ShareableLinkResponse)
+async def update_shareable_link(
+    link_update: ShareableLinkUpdate,
+    request: Request,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """
+    Update what entity types are shown in the shareable link.
+    entity_types: ["movies"], ["restaurants"], or ["movies", "restaurants"]
+    """
+    shareable_link = db.query(ShareableLink).filter(
+        ShareableLink.user_id == current_user.id,
+        ShareableLink.is_active == True
+    ).first()
+    
+    if not shareable_link:
+        raise HTTPException(status_code=404, detail="No active shareable link found. Create one first.")
+    
+    # Update entity_types
+    shareable_link.entity_types = link_update.entity_types
+    db.commit()
+    db.refresh(shareable_link)
     
     # Add shareable URL
     base_url = get_base_url(request)

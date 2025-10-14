@@ -1,25 +1,22 @@
 """
 Restaurant API endpoints for search and saved restaurants management.
 """
-import secrets
 import logging
 from typing import List, Optional
-from fastapi import APIRouter, Depends, HTTPException, Request, Query
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from sqlalchemy import or_, and_
 
 from ....core.database import get_db
 from ....core.auth import get_current_user
 from ....models.user import User
-from ....models.restaurant import SavedRestaurant, RestaurantShareableLink
+from ....models.restaurant import SavedRestaurant
 from ....schemas.restaurant import (
     RestaurantSearchRequest,
     RestaurantSearchResponse,
     SaveRestaurantRequest,
     UpdateSavedRestaurantRequest,
-    SavedRestaurantResponse,
-    RestaurantShareableLinkResponse,
-    RestaurantShareableLinkDelete
+    SavedRestaurantResponse
 )
 from ....services.openai_service import OpenAIRestaurantService
 
@@ -218,103 +215,3 @@ async def delete_saved_restaurant(
     db.commit()
     
     return None
-
-
-# Shareable Links
-def get_base_url(request: Request) -> str:
-    """Get base URL from request."""
-    return f"{request.url.scheme}://{request.headers.get('host', request.client.host)}/Binger"
-
-
-@router.post("/shareable-link", response_model=RestaurantShareableLinkResponse)
-async def create_or_get_restaurant_shareable_link(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """
-    Create a shareable link for the current user's restaurant list.
-    If a link already exists, reactivate and return it.
-    """
-    # Check if user already has a shareable link
-    existing_link = db.query(RestaurantShareableLink).filter(
-        RestaurantShareableLink.user_id == current_user.id
-    ).first()
-    
-    if existing_link:
-        # Reactivate if it was deactivated
-        if not existing_link.is_active:
-            existing_link.is_active = True
-            db.commit()
-            db.refresh(existing_link)
-        
-        # Return existing link
-        base_url = get_base_url(request)
-        existing_link.shareable_url = f"{base_url}/shared/restaurants/{existing_link.token}"
-        return existing_link
-    
-    # Generate unique token
-    token = secrets.token_urlsafe(16)
-    
-    # Create new shareable link
-    shareable_link = RestaurantShareableLink(
-        user_id=current_user.id,
-        token=token,
-        is_active=True
-    )
-    
-    db.add(shareable_link)
-    db.commit()
-    db.refresh(shareable_link)
-    
-    # Add shareable URL
-    base_url = get_base_url(request)
-    shareable_link.shareable_url = f"{base_url}/shared/restaurants/{token}"
-    
-    return shareable_link
-
-
-@router.get("/shareable-link", response_model=Optional[RestaurantShareableLinkResponse])
-async def get_restaurant_shareable_link(
-    request: Request,
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Get the current user's active shareable link."""
-    shareable_link = db.query(RestaurantShareableLink).filter(
-        RestaurantShareableLink.user_id == current_user.id,
-        RestaurantShareableLink.is_active == True
-    ).first()
-    
-    if not shareable_link:
-        return None
-    
-    # Add shareable URL
-    base_url = get_base_url(request)
-    shareable_link.shareable_url = f"{base_url}/shared/restaurants/{shareable_link.token}"
-    
-    return shareable_link
-
-
-@router.delete("/shareable-link", response_model=RestaurantShareableLinkDelete)
-async def delete_restaurant_shareable_link(
-    db: Session = Depends(get_db),
-    current_user: User = Depends(get_current_user)
-):
-    """Revoke the current user's shareable link."""
-    shareable_link = db.query(RestaurantShareableLink).filter(
-        RestaurantShareableLink.user_id == current_user.id
-    ).first()
-    
-    if not shareable_link:
-        raise HTTPException(status_code=404, detail="No shareable link found")
-    
-    # Deactivate the link instead of deleting it
-    shareable_link.is_active = False
-    db.commit()
-    
-    return {
-        "message": "Shareable link revoked successfully. The same URL will be restored if you create a new link.",
-        "success": True
-    }
-
