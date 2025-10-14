@@ -8,13 +8,17 @@ logger = logging.getLogger(__name__)
 
 
 class GeminiRestaurantService:
-    """Service for searching restaurants using Google Gemini Flash 2.5 with internet search (grounding)."""
+    """
+    Service for searching restaurants using Google Gemini Flash 2.5.
+    
+    Note: This uses the standard Gemini API (with API key), which does not support 
+    real-time Google Search grounding. For real-time web search, Vertex AI would be required.
+    Gemini will use its training data to provide restaurant suggestions.
+    """
     
     def __init__(self):
         """Initialize Gemini client with API key."""
         genai.configure(api_key=settings.GEMINI_API_KEY)
-        # Using Gemini 2.0 Flash which has built-in grounding capabilities
-        # No need to explicitly configure tools in the model initialization
         self.model = genai.GenerativeModel(
             model_name="gemini-2.0-flash-exp",
             generation_config={
@@ -27,7 +31,9 @@ class GeminiRestaurantService:
     
     def search_restaurants(self, query: str, location: str, limit: int = 5) -> List[Dict[str, Any]]:
         """
-        Search for restaurants using Gemini Flash 2.5 with internet search.
+        Search for restaurants using Gemini Flash 2.5.
+        
+        Note: Uses Gemini's training data, not real-time web search (which requires Vertex AI).
         
         Args:
             query: Restaurant name or search query
@@ -43,28 +49,27 @@ class GeminiRestaurantService:
         try:
             logger.info(f"Searching with Gemini: '{query}' in {location}")
             
-            # Construct search prompt with grounding instruction
+            # Construct search prompt
             search_prompt = f"""
-You are a restaurant search assistant with real-time internet access. Search the web for restaurants matching the following criteria:
+You are a restaurant search assistant. Find restaurants matching the following criteria using your knowledge:
 
 Restaurant Query: "{query}"
 Location: {location}
 
 **IMPORTANT INSTRUCTIONS:**
-1. Use real-time web search to find ONLY restaurants in {location}
-2. Return ONLY restaurants that actually exist in {location}
-3. Find up to {limit} restaurants that match the query
-4. For each restaurant, find:
-   - Real, publicly accessible image URLs (from Google Maps, official websites, Instagram, food blogs)
-   - Accurate contact information and details
-   - Operating hours if available
+1. Find restaurants in {location} that match the query "{query}"
+2. Return up to {limit} real restaurants that exist (or are known to have existed) in {location}
+3. For each restaurant, provide:
+   - Accurate restaurant details based on your knowledge
+   - Contact information if known
+   - Operating hours if known
+   - Image URLs (use publicly known URLs, or leave empty [] if you don't know real URLs)
    
 **CRITICAL - IMAGE URLS:**
-- You MUST find REAL image URLs that are publicly accessible
-- Look for images from: Google Maps photos, restaurant websites, Instagram, food blogs, review sites
-- Return direct image URLs (ending in .jpg, .jpeg, .png, .webp)
-- If you cannot find real images, return empty array []
-- NEVER create fake or placeholder URLs
+- Only include image URLs if you know real, publicly accessible URLs
+- Do NOT create fake or placeholder URLs
+- It's okay to return empty array [] if you don't know real image URLs
+- Prefer official website URLs or well-known image hosting services
 
 Return the results in this exact JSON structure:
 {{
@@ -114,17 +119,10 @@ If no restaurants found, return: {{"restaurants": []}}
 Search now and return only valid JSON.
 """
             
-            # Call Gemini with Google Search grounding (internet search)
-            # Gemini 2.0 Flash supports grounding via google_search_retrieval tool
-            # Configure the tool with dynamic retrieval mode for real-time search
-            from google.generativeai.types import Tool, GoogleSearchRetrieval
-            
-            google_search_tool = Tool(google_search_retrieval=GoogleSearchRetrieval())
-            
-            response = self.model.generate_content(
-                search_prompt,
-                tools=[google_search_tool]  # Enable real-time Google Search
-            )
+            # Call Gemini to generate restaurant suggestions
+            # Note: Without Vertex AI, we don't have real-time web search
+            # Gemini will use its training data to provide suggestions
+            response = self.model.generate_content(search_prompt)
             
             # Extract response text
             response_text = response.text.strip()
