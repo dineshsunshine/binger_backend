@@ -162,10 +162,10 @@ async def get_saved_restaurant(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get a single saved restaurant by ID."""
+    """Get a single saved restaurant by restaurant_id (e.g., 'bla_bla_jbr_dubai')."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.id == restaurant_id,
+            SavedRestaurant.restaurant_id == restaurant_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
@@ -186,7 +186,7 @@ async def update_saved_restaurant(
     """Update a saved restaurant (mark as visited, add notes, rating, tags)."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.id == restaurant_id,
+            SavedRestaurant.restaurant_id == restaurant_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
@@ -219,7 +219,7 @@ async def delete_saved_restaurant(
     """Remove a restaurant from saved list."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.id == restaurant_id,
+            SavedRestaurant.restaurant_id == restaurant_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
