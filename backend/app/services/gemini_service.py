@@ -13,6 +13,8 @@ class GeminiRestaurantService:
     def __init__(self):
         """Initialize Gemini client with API key."""
         genai.configure(api_key=settings.GEMINI_API_KEY)
+        # Using Gemini 2.0 Flash which has built-in grounding capabilities
+        # No need to explicitly configure tools in the model initialization
         self.model = genai.GenerativeModel(
             model_name="gemini-2.0-flash-exp",
             generation_config={
@@ -20,7 +22,6 @@ class GeminiRestaurantService:
                 "top_p": 0.95,
                 "top_k": 40,
                 "max_output_tokens": 8192,
-                # Note: response_mime_type cannot be used with google_search_retrieval
             }
         )
     
@@ -114,10 +115,15 @@ Search now and return only valid JSON.
 """
             
             # Call Gemini with Google Search grounding (internet search)
-            # Using the correct 'google_search' tool for real-time web search
+            # Gemini 2.0 Flash supports grounding via google_search_retrieval tool
+            # Configure the tool with dynamic retrieval mode for real-time search
+            from google.generativeai.types import Tool, GoogleSearchRetrieval
+            
+            google_search_tool = Tool(google_search_retrieval=GoogleSearchRetrieval())
+            
             response = self.model.generate_content(
                 search_prompt,
-                tools=['google_search']  # Enable real-time internet search
+                tools=[google_search_tool]  # Enable real-time Google Search
             )
             
             # Extract response text
