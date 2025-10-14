@@ -14,8 +14,9 @@ pyjwt==2.10.1
 google-auth==2.37.0
 requests==2.32.3
 
-# AI/ML
+# AI/ML & External APIs
 openai==2.3.0  # For restaurant search with web search
+requests==2.31.0  # For Foursquare API calls
 
 # Settings management
 pydantic==2.10.6

@@ -19,30 +19,131 @@ from ....schemas.restaurant import (
     SavedRestaurantResponse
 )
 from ....services.openai_service import OpenAIRestaurantService
+from ....services.foursquare_service import FoursquareRestaurantService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
 
-# Restaurant Search (OpenAI)
+# Restaurant Search (Multi-Mode: OpenAI, Foursquare, or Hybrid)
 @router.post("/search", response_model=RestaurantSearchResponse)
 async def search_restaurants(
     request: RestaurantSearchRequest,
     current_user: User = Depends(get_current_user)
 ):
     """
-    Search for restaurants using OpenAI with web search.
+    Search for restaurants using OpenAI, Foursquare, or both (hybrid).
+    
+    Search Modes:
+    - mode=1: OpenAI only (intelligent search with web data, may have placeholder images)
+    - mode=2: Foursquare only (real restaurant data with photos, faster)
+    - mode=3: Hybrid (combines OpenAI intelligence with Foursquare photos - RECOMMENDED)
+    
     Returns array of 0-5 matching restaurants in the specified location.
     """
     try:
-        service = OpenAIRestaurantService()
-        restaurants = service.search_restaurants(request.query, request.location)
+        restaurants = []
+        
+        # Mode 1: OpenAI only
+        if request.mode == 1:
+            logger.info(f"Using OpenAI search for: {request.query} in {request.location}")
+            openai_service = OpenAIRestaurantService()
+            restaurants = openai_service.search_restaurants(request.query, request.location)
+        
+        # Mode 2: Foursquare only
+        elif request.mode == 2:
+            logger.info(f"Using Foursquare search for: {request.query} in {request.location}")
+            foursquare_service = FoursquareRestaurantService()
+            restaurants = foursquare_service.search_restaurants(request.query, request.location)
+        
+        # Mode 3: Hybrid (OpenAI + Foursquare)
+        elif request.mode == 3:
+            logger.info(f"Using Hybrid search for: {request.query} in {request.location}")
+            
+            # Get results from both services
+            openai_service = OpenAIRestaurantService()
+            foursquare_service = FoursquareRestaurantService()
+            
+            openai_restaurants = []
+            foursquare_restaurants = []
+            
+            try:
+                openai_restaurants = openai_service.search_restaurants(request.query, request.location)
+            except Exception as e:
+                logger.warning(f"OpenAI search failed in hybrid mode: {str(e)}")
+            
+            try:
+                foursquare_restaurants = foursquare_service.search_restaurants(request.query, request.location)
+            except Exception as e:
+                logger.warning(f"Foursquare search failed in hybrid mode: {str(e)}")
+            
+            # Merge results: Prioritize Foursquare for real photos, supplement with OpenAI
+            restaurants = _merge_restaurant_results(openai_restaurants, foursquare_restaurants)
         
         return RestaurantSearchResponse(restaurants=restaurants)
     
     except Exception as e:
         logger.error(f"Restaurant search failed: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+def _merge_restaurant_results(openai_results: List[dict], foursquare_results: List[dict]) -> List[dict]:
+    """
+    Merge OpenAI and Foursquare results intelligently.
+    Strategy: Use Foursquare results (with real photos) and supplement with OpenAI if needed.
+    """
+    merged = []
+    
+    # Start with Foursquare results (they have real photos)
+    for fs_restaurant in foursquare_results:
+        merged.append(fs_restaurant)
+    
+    # Add OpenAI results that don't overlap (name/location similarity check)
+    for ai_restaurant in openai_results:
+        if not _is_duplicate_restaurant(ai_restaurant, merged):
+            # If OpenAI result has real images, include it
+            images = ai_restaurant.get("images", [])
+            has_real_images = images and all(img for img in images if img and not img.endswith("placeholder.jpg"))
+            
+            if has_real_images or len(merged) < 3:  # Include if has images OR we need more results
+                merged.append(ai_restaurant)
+    
+    # Limit to top 5 results
+    return merged[:5]
+
+
+def _is_duplicate_restaurant(restaurant: dict, existing_list: List[dict]) -> bool:
+    """Check if a restaurant is already in the existing list (fuzzy match by name and city)."""
+    name = restaurant.get("restaurant_name", "").lower()
+    city = restaurant.get("city", "").lower()
+    
+    for existing in existing_list:
+        existing_name = existing.get("restaurant_name", "").lower()
+        existing_city = existing.get("city", "").lower()
+        
+        # Simple fuzzy match: check if names are very similar and same city
+        if _similarity(name, existing_name) > 0.7 and city == existing_city:
+            return True
+    
+    return False
+
+
+def _similarity(s1: str, s2: str) -> float:
+    """Calculate simple similarity ratio between two strings."""
+    if not s1 or not s2:
+        return 0.0
+    
+    # Simple word overlap ratio
+    words1 = set(s1.split())
+    words2 = set(s2.split())
+    
+    if not words1 or not words2:
+        return 0.0
+    
+    intersection = words1.intersection(words2)
+    union = words1.union(words2)
+    
+    return len(intersection) / len(union) if union else 0.0
 
 
 # Saved Restaurants Management

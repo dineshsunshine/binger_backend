@@ -30,6 +30,10 @@ class Settings(BaseSettings):
     # OpenAI (for restaurant search)
     OPENAI_API_KEY: str
     OPENAI_MODEL: str = "gpt-4o"  # or gpt-4o-mini for faster/cheaper responses
+    
+    # Foursquare (for restaurant search with photos)
+    FOURSQUARE_API_KEY: str
+    
     RESTAURANT_SEARCH_SYSTEM_PROMPT: str = """You are a restaurant information expert with real-time web search capabilities.
 
 When given a restaurant search query and a location, use web search to find accurate, up-to-date information for restaurants ONLY in the specified location. Do NOT return restaurants from other cities or countries.
