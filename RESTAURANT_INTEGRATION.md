@@ -22,17 +22,16 @@ The Binger backend now supports restaurant search and management, powered by Ope
 - Use `/api/shareable-link` with `entity_types` parameter (not `/api/restaurants/shareable-link`)
 - One link per user can show movies, restaurants, or both
 
-### Restaurant Images ✨
-- **Gemini Integration (Mode 2 & 3):** Google Gemini Flash 2.5 with **real-time internet search** finds real, publicly accessible restaurant image URLs
-- **Sources:** Images come from Google Maps photos, restaurant websites, Instagram, food blogs, review sites, etc.
-- **OpenAI Limitation (Mode 1):** May return placeholder images as it lacks real-time web browsing
-- **Recommendation:** Use **Mode 2 (Gemini)** or **Mode 3 (Hybrid)** for best image quality
-- **Fallback:** If no images are found, the frontend should display a suitable placeholder
-- **Sources:** Images may come from the restaurant's website, Google Maps, Instagram, TripAdvisor, Zomato, etc.
+### Restaurant Images & Data Sources
+- **Mode 1 (OpenAI):** Uses AI knowledge, may return placeholder images as it lacks real-time web browsing
+- **Mode 2 (Gemini):** Uses Gemini's training data (not real-time web search with API key approach)
+- **Mode 3 (Hybrid):** Combines both AI models for better coverage
+- **Note:** Real-time web search with grounding requires Google Vertex AI (not available with standard API keys)
+- **Image Sources:** When available, images come from restaurant websites, Google Maps, Instagram, TripAdvisor, Zomato, etc.
 - **Availability:** Not all restaurants will have image URLs available
 - **Fallback:** If no images are found, the `images` array will be empty `[]`
 - **Recommendation:** Always implement a fallback placeholder image in your UI for restaurants without photos
-- **Quality:** Image quality and availability depend on the restaurant's online presence
+- **Quality:** Image quality and availability depend on the restaurant's online presence and AI knowledge
 
 ---
 
@@ -54,11 +53,11 @@ Search for restaurants using AI (OpenAI), Google Gemini Flash 2.5 with internet 
 **Rate Limit:** Consider implementing debouncing for hybrid/OpenAI modes
 
 **Search Modes:**
-- **Mode 1 (OpenAI only):** Intelligent AI search, may have placeholder images
-- **Mode 2 (Google Gemini Flash 2.5):** Real-time internet search with high-quality photos ✨ **NEW!**
-- **Mode 3 (Hybrid - RECOMMENDED):** Combines OpenAI intelligence with Gemini's real-time web data and photos
+- **Mode 1 (OpenAI only):** Intelligent AI search using GPT-4's knowledge
+- **Mode 2 (Google Gemini Flash 2.5):** AI search using Gemini's training data
+- **Mode 3 (Hybrid - RECOMMENDED):** Combines both OpenAI and Gemini for better coverage
 
-**Current Recommendation:** Use **Mode 3 (Hybrid)** for best results with real photos!
+**Current Recommendation:** Use **Mode 3 (Hybrid)** for best results combining both AI models!
 
 **Request Body:**
 ```json
@@ -96,13 +95,12 @@ const data = await response.json();
 
 | Feature | Mode 1 (OpenAI) | Mode 2 (Gemini Flash 2.5) | Mode 3 (Hybrid) |
 |---------|-----------------|---------------------------|-----------------|
-| Real Photos | ❌ May be placeholders | ✅ High-quality real photos | ✅ Gemini photos prioritized |
-| Search Intelligence | ✅ Very smart AI | ✅ Very smart AI + Real-time web | ✅ Best of both |
-| Internet Search | ❌ Limited | ✅ Real-time web search | ✅ Real-time web search |
+| Data Source | GPT-4 training data | Gemini training data | Both AI models |
+| Search Intelligence | ✅ Very smart AI | ✅ Very smart AI | ✅ Best of both |
 | Speed | ⚠️ 3-8 seconds | ⚠️ 3-6 seconds | ⚠️ 4-10 seconds |
-| Data Accuracy | ✅ Good | ✅ Excellent (real-time) | ✅ Best |
-| Unique Restaurants | ✅ Can find obscure places | ✅ Real-time search | ✅ Most comprehensive |
-| **Recommended For** | Basic searches | Real-time data needs | **Best overall experience** |
+| Data Accuracy | ✅ Good | ✅ Good | ✅ Best (combined) |
+| Coverage | ✅ Good | ✅ Good | ✅ Most comprehensive |
+| **Recommended For** | Single AI model | Single AI model | **Best overall experience** |
 
 **Response:**
 ```json
