@@ -74,10 +74,19 @@ Return an array of restaurants (up to 5 matches) in this exact structure:
         "tripadvisor": "url or null"
       },
       "known_for": ["Highlight 1", "Highlight 2", "Highlight 3"],
-      "images": ["url1", "url2"]
+      "images": ["real_image_url_1", "real_image_url_2"]
     }
   ]
 }
+
+**CRITICAL INSTRUCTIONS FOR IMAGES:**
+- You MUST find and return REAL, publicly accessible image URLs of the actual restaurant
+- Search for images from: restaurant's official website, Google Maps photos, Instagram, food blogs, TripAdvisor, Zomato, etc.
+- Return direct image URLs (ending in .jpg, .jpeg, .png, .webp) that show the restaurant, food, or interior
+- If you cannot find real image URLs after searching, return an empty array [] 
+- NEVER create fake/placeholder URLs like "https://restaurantname.com/images/gallery1.jpg"
+- NEVER use example or dummy URLs
+- Prefer high-quality photos of food, ambiance, or the restaurant exterior/interior
 
 If no restaurants found, return: {"restaurants": []}
 """

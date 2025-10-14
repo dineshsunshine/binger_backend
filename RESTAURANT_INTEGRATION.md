@@ -19,6 +19,14 @@ The Binger backend now supports restaurant search and management, powered by Ope
 - Use `/api/shareable-link` with `entity_types` parameter (not `/api/restaurants/shareable-link`)
 - One link per user can show movies, restaurants, or both
 
+### Restaurant Images
+- **Image URLs:** OpenAI attempts to find real, publicly accessible restaurant images from web search
+- **Sources:** Images may come from the restaurant's website, Google Maps, Instagram, TripAdvisor, Zomato, etc.
+- **Availability:** Not all restaurants will have image URLs available
+- **Fallback:** If no images are found, the `images` array will be empty `[]`
+- **Recommendation:** Always implement a fallback placeholder image in your UI for restaurants without photos
+- **Quality:** Image quality and availability depend on the restaurant's online presence
+
 ---
 
 ## 🔑 Base URLs
