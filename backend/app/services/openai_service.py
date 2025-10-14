@@ -19,12 +19,13 @@ class OpenAIRestaurantService:
         self.model = settings.OPENAI_MODEL
         self.system_prompt = settings.RESTAURANT_SEARCH_SYSTEM_PROMPT
     
-    def search_restaurants(self, query: str) -> List[Dict[str, Any]]:
+    def search_restaurants(self, query: str, location: str) -> List[Dict[str, Any]]:
         """
         Search for restaurants using OpenAI with real-time web search.
         
         Args:
-            query: Restaurant search query (e.g., "Bla Bla Dubai", "sushi restaurants in Tokyo")
+            query: Restaurant search query (e.g., "Bla Bla", "sushi restaurants", "best Italian food")
+            location: City or location to search in (e.g., "Dubai", "New York", "Tokyo")
         
         Returns:
             List of restaurant dictionaries matching the specified JSON structure
@@ -33,7 +34,9 @@ class OpenAIRestaurantService:
             Exception: If OpenAI API call fails or returns invalid JSON
         """
         try:
-            logger.info(f"Searching restaurants with query: {query}")
+            # Construct a clear search query with location
+            search_query = f"Find restaurant: '{query}' in {location}. Only search for restaurants in {location}, not other cities."
+            logger.info(f"Searching restaurants with query: {query} in location: {location}")
             
             # Call OpenAI with web search enabled
             # Note: Web search is available in GPT-4 models with specific configuration
@@ -41,7 +44,7 @@ class OpenAIRestaurantService:
                 model=self.model,
                 messages=[
                     {"role": "system", "content": self.system_prompt},
-                    {"role": "user", "content": query}
+                    {"role": "user", "content": search_query}
                 ],
                 temperature=0.7,
                 max_tokens=4000,

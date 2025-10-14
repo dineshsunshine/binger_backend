@@ -60,6 +60,8 @@ class RestaurantSearchRequest(BaseModel):
     """Request for searching restaurants."""
     query: str = Field(..., min_length=1, max_length=200, 
                       description="Restaurant name or search query")
+    location: str = Field(..., min_length=2, max_length=100,
+                         description="City or location to search in (e.g., 'Dubai', 'New York', 'Tokyo')")
 
 
 class RestaurantSearchResponse(BaseModel):

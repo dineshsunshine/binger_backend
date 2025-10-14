@@ -32,11 +32,11 @@ async def search_restaurants(
 ):
     """
     Search for restaurants using OpenAI with web search.
-    Returns array of 0-5 matching restaurants.
+    Returns array of 0-5 matching restaurants in the specified location.
     """
     try:
         service = OpenAIRestaurantService()
-        restaurants = service.search_restaurants(request.query)
+        restaurants = service.search_restaurants(request.query, request.location)
         
         return RestaurantSearchResponse(restaurants=restaurants)
     

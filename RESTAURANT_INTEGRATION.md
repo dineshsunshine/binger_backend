@@ -38,7 +38,19 @@ Search for restaurants using AI with real-time web data.
 **Auth Required:** Yes  
 **Rate Limit:** Consider implementing debouncing (AI search can be slower)
 
-**Request:**
+**Request Body:**
+```json
+{
+  "query": "Bla Bla",
+  "location": "Dubai"
+}
+```
+
+**Parameters:**
+- `query` (required): Restaurant name or search query (e.g., "Bla Bla", "best sushi", "Italian restaurant")
+- `location` (required): City or location to search in (e.g., "Dubai", "New York", "Tokyo")
+
+**Request Example:**
 ```javascript
 const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/search', {
   method: 'POST',
@@ -47,7 +59,8 @@ const response = await fetch('https://binger-backend.onrender.com/Binger/api/res
     'Content-Type': 'application/json'
   },
   body: JSON.stringify({
-    query: "Bla Bla Dubai"  // or "sushi restaurants in Tokyo", etc.
+    query: "Bla Bla",
+    location: "Dubai"
   })
 });
 
