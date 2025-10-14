@@ -8,19 +8,26 @@ The Binger backend now supports restaurant search and management, powered by Ope
 
 ## ⚠️ Important Notes
 
-### OpenAI Search Performance
-- **Response Time:** Restaurant search uses OpenAI's API with web search, which can take **3-8 seconds** depending on query complexity
+### AI Search Performance
+- **Response Time:** Restaurant search can take **3-10 seconds** depending on query complexity and mode
+  - Mode 1 (OpenAI): 3-8 seconds
+  - Mode 2 (Gemini): 3-6 seconds
+  - Mode 3 (Hybrid): 4-10 seconds
 - **User Experience:** Always show a loading state with a message like "Searching with AI..." or "Finding restaurants..."
 - **Best Practice:** Implement debouncing (wait 500ms after user stops typing before searching) to avoid excessive API calls
-- **Error Handling:** OpenAI may occasionally fail or timeout - handle these gracefully with retry options
+- **Error Handling:** AI services may occasionally fail or timeout - handle these gracefully with retry options
 
 ### Shareable Links
 - Restaurant shareable links are **unified** with movie shareable links
 - Use `/api/shareable-link` with `entity_types` parameter (not `/api/restaurants/shareable-link`)
 - One link per user can show movies, restaurants, or both
 
-### Restaurant Images
-- **Image URLs:** OpenAI attempts to find real, publicly accessible restaurant images from web search
+### Restaurant Images ✨
+- **Gemini Integration (Mode 2 & 3):** Google Gemini Flash 2.5 with **real-time internet search** finds real, publicly accessible restaurant image URLs
+- **Sources:** Images come from Google Maps photos, restaurant websites, Instagram, food blogs, review sites, etc.
+- **OpenAI Limitation (Mode 1):** May return placeholder images as it lacks real-time web browsing
+- **Recommendation:** Use **Mode 2 (Gemini)** or **Mode 3 (Hybrid)** for best image quality
+- **Fallback:** If no images are found, the frontend should display a suitable placeholder
 - **Sources:** Images may come from the restaurant's website, Google Maps, Instagram, TripAdvisor, Zomato, etc.
 - **Availability:** Not all restaurants will have image URLs available
 - **Fallback:** If no images are found, the `images` array will be empty `[]`
