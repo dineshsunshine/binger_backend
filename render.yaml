@@ -41,10 +41,10 @@ services:
         sync: false
       
       - key: GOOGLE_CUSTOM_SEARCH_API_KEY
-        sync: false
+        value: AIzaSyBB6CdVPhjexHFDdv0DYPb_nGxZ2_KLyp8
       
       - key: GOOGLE_CUSTOM_SEARCH_ENGINE_ID
-        sync: false
+        value: a61503665501e4d59
       
       - key: JWT_ALGORITHM
         value: HS256
