@@ -62,8 +62,6 @@ class RestaurantSearchRequest(BaseModel):
                       description="Restaurant name or search query")
     location: str = Field(..., min_length=2, max_length=100,
                          description="City or location to search in (e.g., 'Dubai', 'New York', 'Tokyo')")
-    mode: int = Field(default=3, ge=1, le=3,
-                     description="Search mode: 1=OpenAI only, 2=Foursquare only, 3=Hybrid (both)")
 
 
 class RestaurantSearchResponse(BaseModel):

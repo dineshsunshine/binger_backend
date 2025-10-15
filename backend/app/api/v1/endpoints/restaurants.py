@@ -69,65 +69,55 @@ async def quick_search_restaurants(
         raise HTTPException(status_code=500, detail=f"Quick search failed: {str(e)}")
 
 
-# Restaurant Search (Multi-Mode: OpenAI, Foursquare, or Hybrid)
+# Restaurant Search (Hybrid: OpenAI + Gemini)
 @router.post("/search", response_model=RestaurantSearchResponse)
 async def search_restaurants(
     request: RestaurantSearchRequest,
     current_user: User = Depends(get_current_user)
 ):
     """
-    Search for restaurants using OpenAI, Google Gemini, or both (hybrid).
+    Search for restaurants using hybrid AI approach (OpenAI + Google Gemini).
     
-    Search Modes:
-    - mode=1: OpenAI only (intelligent search, may have placeholder images)
-    - mode=2: Google Gemini Flash 2.5 with internet search (real-time data with photos)
-    - mode=3: Hybrid (combines both OpenAI and Gemini results - RECOMMENDED)
+    This endpoint:
+    - Combines results from both OpenAI and Gemini for comprehensive coverage
+    - Fetches real restaurant images from Google Custom Search API
+    - Returns 0-5 matching restaurants in the specified location
+    - Takes 3-10 seconds (AI processing + image fetching)
     
-    Returns array of 0-5 matching restaurants in the specified location.
+    For faster initial results, use /quick-search endpoint.
     """
     try:
-        restaurants = []
+        logger.info(f"Hybrid search for: {request.query} in {request.location}")
         
-        # Mode 1: OpenAI only
-        if request.mode == 1:
-            logger.info(f"Using OpenAI search for: {request.query} in {request.location}")
-            openai_service = OpenAIRestaurantService()
-            restaurants = openai_service.search_restaurants(request.query, request.location)
+        # Get results from both AI services
+        openai_service = OpenAIRestaurantService()
+        gemini_service = GeminiRestaurantService()
         
-        # Mode 2: Google Gemini only
-        elif request.mode == 2:
-            logger.info(f"Using Gemini search for: {request.query} in {request.location}")
-            gemini_service = GeminiRestaurantService()
-            restaurants = gemini_service.search_restaurants(request.query, request.location)
+        openai_restaurants = []
+        gemini_restaurants = []
         
-        # Mode 3: Hybrid (OpenAI + Gemini)
-        elif request.mode == 3:
-            logger.info(f"Using Hybrid search for: {request.query} in {request.location}")
-            
-            # Get results from both services
-            openai_service = OpenAIRestaurantService()
-            gemini_service = GeminiRestaurantService()
-            
-            openai_restaurants = []
-            gemini_restaurants = []
-            
-            try:
-                openai_restaurants = openai_service.search_restaurants(request.query, request.location)
-            except Exception as e:
-                logger.warning(f"OpenAI search failed in hybrid mode: {str(e)}")
-            
-            try:
-                gemini_restaurants = gemini_service.search_restaurants(request.query, request.location)
-            except Exception as e:
-                logger.warning(f"Gemini search failed in hybrid mode: {str(e)}")
-            
-            # Merge results: Prioritize Gemini for real-time data with photos, supplement with OpenAI
-            restaurants = _merge_restaurant_results(openai_restaurants, gemini_restaurants)
+        # Try OpenAI
+        try:
+            openai_restaurants = openai_service.search_restaurants(request.query, request.location)
+            logger.info(f"OpenAI found {len(openai_restaurants)} restaurants")
+        except Exception as e:
+            logger.warning(f"OpenAI search failed: {str(e)}")
         
-        # Fetch real images using Google Custom Search API for all results
+        # Try Gemini
+        try:
+            gemini_restaurants = gemini_service.search_restaurants(request.query, request.location)
+            logger.info(f"Gemini found {len(gemini_restaurants)} restaurants")
+        except Exception as e:
+            logger.warning(f"Gemini search failed: {str(e)}")
+        
+        # Merge results from both services
+        restaurants = _merge_restaurant_results(openai_restaurants, gemini_restaurants)
+        logger.info(f"Merged to {len(restaurants)} unique restaurants")
+        
+        # Fetch real images using Google Custom Search API
         # Force refetch to ensure we ALWAYS get real images (not AI-generated placeholders)
         if restaurants:
-            logger.info("Fetching real images using Google Custom Search API (force refetch)")
+            logger.info("Fetching real images using Google Custom Search API")
             image_service = GoogleImageService()
             restaurants = image_service.fetch_images_for_restaurants(restaurants, force_refetch=True)
         

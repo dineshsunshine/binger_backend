@@ -127,7 +127,6 @@ curl -X POST "https://your-ngrok-url/Binger/api/restaurants/quick-search" \
 interface RestaurantSearchRequest {
   query: string;      // Use the EXACT restaurant name from quick search
   location: string;   // Same location
-  mode?: number;      // 1=OpenAI, 2=Gemini, 3=Hybrid (default: 3)
 }
 ```
 
@@ -179,8 +178,7 @@ curl -X POST "https://your-ngrok-url/Binger/api/restaurants/search" \
   -H "Content-Type: application/json" \
   -d '{
     "query": "Zuma Dubai",
-    "location": "Dubai",
-    "mode": 3
+    "location": "Dubai"
   }'
 ```
 
@@ -250,8 +248,7 @@ function RestaurantSearch() {
         },
         body: JSON.stringify({
           query: result.name,  // Use exact name from quick search
-          location: result.location,
-          mode: 3
+          location: result.location
         })
       });
       
@@ -529,8 +526,7 @@ POST /quick-search
 POST /search
 {
   "query": "Zuma Dubai",
-  "location": "Dubai",
-  "mode": 3
+  "location": "Dubai"
 }
 
 // Response: Full restaurant details (3-5 seconds)

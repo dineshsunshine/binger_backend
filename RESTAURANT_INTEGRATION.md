@@ -35,12 +35,11 @@ This approach provides a **much better user experience** and is **80% more cost-
 ## ⚠️ Important Notes
 
 ### AI Search Performance
-- **Response Time:** Restaurant search can take **3-10 seconds** depending on query complexity and mode
-  - Mode 1 (OpenAI): 3-8 seconds
-  - Mode 2 (Gemini): 3-6 seconds
-  - Mode 3 (Hybrid): 4-10 seconds
+- **Response Time:** Restaurant search can take **3-10 seconds** due to AI processing and image fetching
+  - Hybrid AI search (OpenAI + Gemini): 4-10 seconds
+  - Quick search (Google Custom Search only): < 2 seconds
 - **User Experience:** Always show a loading state with a message like "Searching with AI..." or "Finding restaurants..."
-- **Best Practice:** Implement debouncing (wait 500ms after user stops typing before searching) to avoid excessive API calls
+- **Best Practice:** Use `/quick-search` for initial results, then `/search` when user clicks for full details
 - **Error Handling:** AI services may occasionally fail or timeout - handle these gracefully with retry options
 
 ### Shareable Links
@@ -49,14 +48,11 @@ This approach provides a **much better user experience** and is **80% more cost-
 - One link per user can show movies, restaurants, or both
 
 ### Restaurant Images & Data Sources ✨ **REAL PHOTOS!**
-- **🎉 NEW: Google Custom Search API Integration!** All restaurant search results now include **real, high-quality images** from the web
+- **🎉 Google Custom Search API Integration!** All restaurant search results include **real, high-quality images** from the web
 - **How It Works:** After AI finds restaurants, the backend automatically fetches real photos using Google Custom Search API
 - **Image Sources:** Google Maps, restaurant websites, Instagram, food blogs, TripAdvisor, Zomato, Yelp, and more
 - **Quality:** Professional, high-resolution photos of food, restaurant interiors, and exteriors
-- **Coverage:** Works for **all search modes** (OpenAI, Gemini, and Hybrid) - images are fetched automatically
-- **Mode 1 (OpenAI):** AI intelligence + real photos from Google
-- **Mode 2 (Gemini):** Gemini's training data + real photos from Google  
-- **Mode 3 (Hybrid):** ⭐ Combined AI results + real photos (BEST!)
+- **Search Approach:** Hybrid AI (OpenAI + Gemini) combined with real Google images for best results
 - **Fallback:** If no images are found, the `images` array will be empty `[]`
 - **Recommendation:** Always implement a fallback placeholder image in your UI for rare cases without photos
 
@@ -71,36 +67,29 @@ This approach provides a **much better user experience** and is **80% more cost-
 
 ## 📍 API Endpoints
 
-### 1. Search Restaurants (Multi-Mode: OpenAI, Gemini, or Hybrid)
+### 1. Search Restaurants (Hybrid AI: OpenAI + Gemini)
 
-Search for restaurants using AI (OpenAI), Google Gemini Flash 2.5 with internet search, or a hybrid combination of both.
+Search for restaurants using hybrid AI approach combining OpenAI and Google Gemini for comprehensive results.
 
 **Endpoint:** `POST /restaurants/search`  
 **Auth Required:** Yes  
-**Rate Limit:** Consider implementing debouncing for hybrid/OpenAI modes
+**Response Time:** 3-10 seconds (AI processing + image fetching)
 
-**Search Modes:**
-- **Mode 1 (OpenAI only):** Intelligent AI search using GPT-4's knowledge
-- **Mode 2 (Google Gemini Flash 2.5):** AI search using Gemini's training data
-- **Mode 3 (Hybrid - RECOMMENDED):** Combines both OpenAI and Gemini for better coverage
-
-**Current Recommendation:** Use **Mode 3 (Hybrid)** for best results combining both AI models!
+**Recommendation:** Use `/quick-search` first for fast results, then call `/search` when user clicks on a restaurant for full details.
 
 **Request Body:**
 ```json
 {
   "query": "Bla Bla",
-  "location": "Dubai",
-  "mode": 3
+  "location": "Dubai"
 }
 ```
 
 **Parameters:**
 - `query` (required): Restaurant name or search query (e.g., "Bla Bla", "best sushi", "Italian restaurant")
 - `location` (required): City or location to search in (e.g., "Dubai", "New York", "Tokyo")
-- `mode` (optional, default=3): Search mode (1=OpenAI, 2=Gemini, 3=Hybrid - RECOMMENDED)
 
-**Request Example (Hybrid Mode - Recommended):**
+**Request Example:**
 ```javascript
 const response = await fetch('https://binger-backend.onrender.com/Binger/api/restaurants/search', {
   method: 'POST',
@@ -110,24 +99,18 @@ const response = await fetch('https://binger-backend.onrender.com/Binger/api/res
   },
   body: JSON.stringify({
     query: "Bla Bla",
-    location: "Dubai",
-    mode: 3  // Hybrid: Best results with real photos!
+    location: "Dubai"
   })
 });
 
 const data = await response.json();
 ```
 
-**Mode Comparison:**
-
-| Feature | Mode 1 (OpenAI) | Mode 2 (Gemini Flash 2.5) | Mode 3 (Hybrid) |
-|---------|-----------------|---------------------------|-----------------|
-| Data Source | GPT-4 training data | Gemini training data | Both AI models |
-| Search Intelligence | ✅ Very smart AI | ✅ Very smart AI | ✅ Best of both |
-| Speed | ⚠️ 3-8 seconds | ⚠️ 3-6 seconds | ⚠️ 4-10 seconds |
-| Data Accuracy | ✅ Good | ✅ Good | ✅ Best (combined) |
-| Coverage | ✅ Good | ✅ Good | ✅ Most comprehensive |
-| **Recommended For** | Single AI model | Single AI model | **Best overall experience** |
+**What You Get:**
+- ✅ Hybrid AI results from both OpenAI and Gemini
+- ✅ Real, high-quality images from Google Custom Search API
+- ✅ Comprehensive restaurant information
+- ✅ 0-5 matching restaurants in the specified location
 
 **Response:**
 ```json
