@@ -20,6 +20,7 @@ from ....schemas.restaurant import (
 )
 from ....services.openai_service import OpenAIRestaurantService
 from ....services.gemini_service import GeminiRestaurantService
+from ....services.google_image_service import GoogleImageService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -79,6 +80,12 @@ async def search_restaurants(
             
             # Merge results: Prioritize Gemini for real-time data with photos, supplement with OpenAI
             restaurants = _merge_restaurant_results(openai_restaurants, gemini_restaurants)
+        
+        # Fetch real images using Google Custom Search API for all results
+        if restaurants:
+            logger.info("Fetching real images using Google Custom Search API")
+            image_service = GoogleImageService()
+            restaurants = image_service.fetch_images_for_restaurants(restaurants)
         
         return RestaurantSearchResponse(restaurants=restaurants)
     

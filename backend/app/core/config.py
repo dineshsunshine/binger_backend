@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     # Google Gemini (for restaurant search with internet search)
     GEMINI_API_KEY: str
     
+    # Google Custom Search (for restaurant images)
+    GOOGLE_CUSTOM_SEARCH_API_KEY: str
+    GOOGLE_CUSTOM_SEARCH_ENGINE_ID: str
+    
     RESTAURANT_SEARCH_SYSTEM_PROMPT: str = """You are a restaurant information expert with real-time web search capabilities.
 
 When given a restaurant search query and a location, use web search to find accurate, up-to-date information for restaurants ONLY in the specified location. Do NOT return restaurants from other cities or countries.

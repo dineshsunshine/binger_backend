@@ -40,6 +40,12 @@ services:
       - key: GEMINI_API_KEY
         sync: false
       
+      - key: GOOGLE_CUSTOM_SEARCH_API_KEY
+        sync: false
+      
+      - key: GOOGLE_CUSTOM_SEARCH_ENGINE_ID
+        sync: false
+      
       - key: JWT_ALGORITHM
         value: HS256
       
