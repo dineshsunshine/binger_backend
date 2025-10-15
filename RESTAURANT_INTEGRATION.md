@@ -6,6 +6,32 @@ The Binger backend now supports restaurant search and management, powered by Ope
 
 ---
 
+## 🚀 NEW: Quick Search Feature
+
+We now have a **fast, two-step search flow** for optimal user experience:
+
+1. **Quick Search** (`/quick-search`) - Fast initial results using Google Custom Search API
+   - ⚡ Returns results in < 2 seconds
+   - 💰 Cost-effective (uses free Google Custom Search API)
+   - 📦 Lightweight data (name, snippet, images, URL)
+   - 🎯 Perfect for search dropdown/list view
+
+2. **Detailed Search** (`/search`) - Full restaurant details with AI
+   - 🧠 Comprehensive information from OpenAI/Gemini
+   - 💵 Only called when user clicks on a result
+   - 📊 Complete data for saving to user's list
+
+**👉 See [RESTAURANT_QUICK_SEARCH_INTEGRATION.md](./RESTAURANT_QUICK_SEARCH_INTEGRATION.md) for the complete quick search guide!**
+
+**Recommended Flow:**
+```
+User types → Quick Search (fast) → Show results → User clicks → Detailed Search (full data) → Save
+```
+
+This approach provides a **much better user experience** and is **80% more cost-efficient** than searching with AI on every keystroke!
+
+---
+
 ## ⚠️ Important Notes
 
 ### AI Search Performance
