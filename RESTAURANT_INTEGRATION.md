@@ -233,7 +233,7 @@ const response = await fetch('https://binger-backend.onrender.com/Binger/api/res
       // ... all restaurant fields from search result
     },
     visited: false,  // optional, default: false
-    personal_rating: 4,  // optional, 1-5
+    personal_rating: 4,  // optional, 0-5 (0=unrated, 1-5=rated)
     notes: "Want to try for anniversary",  // optional
     tags: ["Anniversary", "Special Occasion"]  // optional
   })
@@ -393,7 +393,7 @@ const response = await fetch(
     },
     body: JSON.stringify({
       visited: true,  // optional
-      personal_rating: 5,  // optional, 1-5
+      personal_rating: 5,  // optional, 0-5 (0=unrated, 1-5=rated)
       notes: "Loved it! Great ambiance",  // optional
       tags: ["Anniversary", "Highly Recommended"]  // optional
     })

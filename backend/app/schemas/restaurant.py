@@ -99,7 +99,7 @@ class SaveRestaurantRequest(BaseModel):
     """Request to save a restaurant to user's list."""
     restaurant_data: RestaurantData
     visited: bool = False
-    personal_rating: Optional[int] = Field(None, ge=1, le=5, description="Rating from 1-5")
+    personal_rating: Optional[int] = Field(None, ge=0, le=5, description="Rating from 0-5 (0=unrated, 1-5=rated)")
     notes: Optional[str] = Field(None, max_length=1000)
     tags: List[str] = Field(default_factory=list, max_items=10)
 
@@ -107,7 +107,7 @@ class SaveRestaurantRequest(BaseModel):
 class UpdateSavedRestaurantRequest(BaseModel):
     """Request to update a saved restaurant."""
     visited: Optional[bool] = None
-    personal_rating: Optional[int] = Field(None, ge=1, le=5)
+    personal_rating: Optional[int] = Field(None, ge=0, le=5)
     notes: Optional[str] = Field(None, max_length=1000)
     tags: Optional[List[str]] = Field(None, max_items=10)
 
