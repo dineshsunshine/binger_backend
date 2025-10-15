@@ -14,6 +14,8 @@ from ....models.restaurant import SavedRestaurant
 from ....schemas.restaurant import (
     RestaurantSearchRequest,
     RestaurantSearchResponse,
+    QuickSearchRequest,
+    QuickSearchResponse,
     SaveRestaurantRequest,
     UpdateSavedRestaurantRequest,
     SavedRestaurantResponse
@@ -24,6 +26,47 @@ from ....services.google_image_service import GoogleImageService
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+# Quick Search (Fast, Google Custom Search based)
+@router.post("/quick-search", response_model=QuickSearchResponse)
+async def quick_search_restaurants(
+    request: QuickSearchRequest,
+    current_user: User = Depends(get_current_user)
+):
+    """
+    FAST restaurant search using Google Custom Search API.
+    
+    This endpoint provides:
+    - Quick results (< 2 seconds)
+    - Restaurant names, images, snippets, and URLs
+    - Lightweight response for initial search UI
+    - No AI processing (cost-effective)
+    
+    Use this for the initial search dropdown/list. When user clicks on a result,
+    call the full `/search` endpoint to get detailed restaurant information.
+    
+    Returns array of 0-5 quick results.
+    """
+    try:
+        logger.info(f"Quick search: {request.query} in {request.location}")
+        
+        # Use Google Custom Search for fast results
+        image_service = GoogleImageService()
+        results = image_service.quick_search_restaurants(
+            query=request.query,
+            location=request.location,
+            num_results=5
+        )
+        
+        return QuickSearchResponse(
+            results=results,
+            total=len(results)
+        )
+    
+    except Exception as e:
+        logger.error(f"Quick search failed: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Quick search failed: {str(e)}")
 
 
 # Restaurant Search (Multi-Mode: OpenAI, Foursquare, or Hybrid)

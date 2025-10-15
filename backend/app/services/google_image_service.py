@@ -1,9 +1,10 @@
 """
-Google Custom Search API service for fetching restaurant images.
+Google Custom Search API service for fetching restaurant images and quick search.
 """
 import logging
 import requests
-from typing import List
+import hashlib
+from typing import List, Dict, Any
 from ..core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -108,4 +109,80 @@ class GoogleImageService:
                 restaurant["images"] = []
         
         return restaurants
+    
+    def quick_search_restaurants(self, query: str, location: str, num_results: int = 5) -> List[Dict[str, Any]]:
+        """
+        Fast restaurant search using Google Custom Search API.
+        Returns lightweight results with name, snippet, URL, and images.
+        
+        Args:
+            query: Restaurant name or search query
+            location: City or location to search in
+            num_results: Number of results to return (default: 5, max: 10)
+        
+        Returns:
+            List of quick search results with basic info and images
+        """
+        try:
+            # Construct search query (contextual to restaurants)
+            search_query = f"{query} restaurant {location}"
+            
+            # API parameters for web search (NOT image search)
+            params = {
+                "key": self.api_key,
+                "cx": self.search_engine_id,
+                "q": search_query,
+                "num": min(num_results, 10),  # Google Custom Search max is 10
+                "safe": "active"
+            }
+            
+            logger.info(f"Quick searching restaurants: {search_query}")
+            
+            # Make API request
+            response = requests.get(self.base_url, params=params, timeout=10)
+            response.raise_for_status()
+            
+            data = response.json()
+            
+            # Extract results
+            results = []
+            if "items" in data:
+                for item in data["items"]:
+                    # Generate unique ID from title and location
+                    name = item.get("title", "Unknown Restaurant")
+                    # Clean name (remove common suffixes)
+                    name = name.split(" - ")[0].strip()
+                    name = name.split(" | ")[0].strip()
+                    
+                    # Generate ID
+                    unique_string = f"{name}_{location}".lower().replace(" ", "_")
+                    result_id = hashlib.md5(unique_string.encode()).hexdigest()[:16]
+                    
+                    # Extract snippet
+                    snippet = item.get("snippet", "")
+                    
+                    # Extract URL
+                    url = item.get("link", "")
+                    
+                    # Fetch images for this restaurant
+                    images = self.fetch_restaurant_images(name, location, num_images=2)
+                    
+                    results.append({
+                        "id": result_id,
+                        "name": name,
+                        "snippet": snippet,
+                        "url": url,
+                        "images": images,
+                        "location": location
+                    })
+            
+            logger.info(f"Found {len(results)} quick search results")
+            return results[:num_results]
+            
+        except requests.exceptions.RequestException as e:
+            logger.error(f"Error in quick search from Google Custom Search: {str(e)}")
+            return []
+        except Exception as e:
+            logger.error(f"Unexpected error in quick search: {str(e)}")
+            return []
 

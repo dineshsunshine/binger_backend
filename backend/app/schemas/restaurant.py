@@ -71,6 +71,31 @@ class RestaurantSearchResponse(BaseModel):
     restaurants: List[RestaurantData]
 
 
+# Quick Search (Fast, Google Custom Search based)
+class QuickSearchRequest(BaseModel):
+    """Request for quick restaurant search (fast, lightweight)."""
+    query: str = Field(..., min_length=1, max_length=200, 
+                      description="Restaurant name or search query")
+    location: str = Field(..., min_length=2, max_length=100,
+                         description="City or location (e.g., 'Dubai', 'New York')")
+
+
+class QuickSearchResult(BaseModel):
+    """Lightweight restaurant search result from quick search."""
+    id: str = Field(..., description="Unique identifier (generated from name + location)")
+    name: str = Field(..., description="Restaurant name")
+    snippet: str = Field(..., description="Brief description or snippet")
+    url: Optional[str] = Field(None, description="Website or Google Maps URL")
+    images: List[str] = Field(default_factory=list, description="Restaurant image URLs")
+    location: str = Field(..., description="Location/city")
+
+
+class QuickSearchResponse(BaseModel):
+    """Response for quick search endpoint."""
+    results: List[QuickSearchResult]
+    total: int = Field(..., description="Total number of results")
+
+
 # Saved Restaurants Endpoints
 class SaveRestaurantRequest(BaseModel):
     """Request to save a restaurant to user's list."""

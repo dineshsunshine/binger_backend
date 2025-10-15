@@ -15,6 +15,9 @@ from .restaurant import (
     RestaurantSearchRequest,
     RestaurantSearchResponse,
     RestaurantData,
+    QuickSearchRequest,
+    QuickSearchResponse,
+    QuickSearchResult,
     SaveRestaurantRequest,
     UpdateSavedRestaurantRequest,
     SavedRestaurantResponse
@@ -35,6 +38,9 @@ __all__ = [
     "RestaurantSearchRequest",
     "RestaurantSearchResponse",
     "RestaurantData",
+    "QuickSearchRequest",
+    "QuickSearchResponse",
+    "QuickSearchResult",
     "SaveRestaurantRequest",
     "UpdateSavedRestaurantRequest",
     "SavedRestaurantResponse"
