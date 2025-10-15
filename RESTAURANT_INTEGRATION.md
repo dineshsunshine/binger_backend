@@ -2,7 +2,7 @@
 
 ## Overview
 
-The Binger backend now supports restaurant search and management, powered by OpenAI's GPT-4 with real-time web search. This guide covers all restaurant-related API endpoints.
+The Binger backend now supports restaurant search and management, powered by **Hybrid AI** (OpenAI GPT-4 + Google Gemini) with real restaurant images from Google Custom Search API. This guide covers all restaurant-related API endpoints.
 
 ---
 
@@ -67,7 +67,46 @@ This approach provides a **much better user experience** and is **80% more cost-
 
 ## 📍 API Endpoints
 
-### 1. Search Restaurants (Hybrid AI: OpenAI + Gemini)
+### 1. Quick Search (RECOMMENDED for Fast Results)
+
+Get fast, lightweight restaurant results for initial search UI.
+
+**Endpoint:** `POST /restaurants/quick-search`  
+**Auth Required:** Yes  
+**Response Time:** < 2 seconds
+
+**Request Body:**
+```json
+{
+  "query": "sushi",
+  "location": "Dubai"
+}
+```
+
+**Response:**
+```json
+{
+  "results": [
+    {
+      "id": "zuma_dubai",
+      "name": "Zuma Dubai",
+      "snippet": "Contemporary Japanese restaurant...",
+      "url": "https://...",
+      "images": ["https://...", "https://..."],
+      "location": "Dubai"
+    }
+  ],
+  "total": 5
+}
+```
+
+**👉 For complete quick search documentation, see [RESTAURANT_QUICK_SEARCH_INTEGRATION.md](./RESTAURANT_QUICK_SEARCH_INTEGRATION.md)**
+
+**Use Case:** Perfect for search dropdowns, autocomplete, and initial results. When user clicks on a result, call the detailed search endpoint below.
+
+---
+
+### 2. Detailed Search (Hybrid AI: OpenAI + Gemini)
 
 Search for restaurants using hybrid AI approach combining OpenAI and Google Gemini for comprehensive results.
 
@@ -167,11 +206,12 @@ const data = await response.json();
 **Notes:**
 - Returns 0-5 restaurants per search
 - Empty array if no results found
-- Search is powered by OpenAI with web search, so results are up-to-date
+- Search uses hybrid AI (OpenAI + Gemini) for comprehensive results
+- Real images are fetched from Google Custom Search API automatically
 
 ---
 
-### 2. Save a Restaurant
+### 3. Save a Restaurant
 
 Add a restaurant to the user's saved list.
 
@@ -224,7 +264,7 @@ const data = await response.json();
 
 ---
 
-### 3. Get Saved Restaurant IDs
+### 4. Get Saved Restaurant IDs
 
 Get a list of restaurant IDs that the user has already saved. Useful for checking which restaurants are already in the saved list.
 
@@ -252,7 +292,7 @@ const data = await response.json();
 
 ---
 
-### 4. Get Saved Restaurants
+### 5. Get Saved Restaurants
 
 Retrieve user's saved restaurants with optional filters and sorting.
 
@@ -308,7 +348,7 @@ const response = await fetch(
 
 ---
 
-### 5. Get Single Restaurant
+### 6. Get Single Restaurant
 
 Get details of a specific saved restaurant.
 
@@ -330,7 +370,7 @@ const response = await fetch(
 
 ---
 
-### 6. Update Saved Restaurant
+### 7. Update Saved Restaurant
 
 Update visit status, rating, notes, or tags.
 
@@ -363,7 +403,7 @@ const response = await fetch(
 
 ---
 
-### 7. Delete Saved Restaurant
+### 8. Delete Saved Restaurant
 
 Remove a restaurant from saved list.
 
@@ -389,7 +429,7 @@ await fetch(
 
 > **Important:** Shareable links are now **unified** for both movies and restaurants. You use the same `/api/shareable-link` endpoint with an `entity_types` parameter to control what's shown (movies, restaurants, or both).
 
-### 7. Create or Update Shareable Link
+### 9. Create or Update Shareable Link
 
 Generate a public shareable link for user's list. You can specify what to share: movies, restaurants, or both.
 
@@ -450,7 +490,7 @@ const data = await response.json();
 
 ---
 
-### 8. Update What's Shared
+### 10. Update What's Shared
 
 Change which entities are shown in the shareable link without creating a new URL.
 
@@ -473,7 +513,7 @@ await fetch('https://binger-backend.onrender.com/Binger/api/shareable-link', {
 
 ---
 
-### 9. Get Existing Shareable Link
+### 11. Get Existing Shareable Link
 
 **Endpoint:** `GET /api/shareable-link`  
 **Auth Required:** Yes
@@ -496,7 +536,7 @@ Returns existing link with current `entity_types` or `null` if none exists.
 
 ---
 
-### 10. Revoke Shareable Link
+### 12. Revoke Shareable Link
 
 **Endpoint:** `DELETE /api/shareable-link`  
 **Auth Required:** Yes
@@ -516,8 +556,19 @@ Deactivates the link (same URL will be restored if recreated later).
 ## 🎨 UI/UX Recommendations
 
 ### Restaurant Search Flow
+
+**Recommended Two-Step Flow:**
 1. **Search Box** - Let users type restaurant names or queries
-2. **Loading State** - Show "Searching with AI..." (can take 2-5 seconds)
+2. **Quick Search** - Show fast results (< 2 seconds) in dropdown
+3. **User Clicks Result** - Trigger detailed search
+4. **Loading State** - Show "Getting full details..." (3-10 seconds)
+5. **Results Display** - Show complete restaurant info
+6. **Save Button** - "+ Save" button on each result
+7. **Empty State** - "No restaurants found. Try a different search."
+
+**Alternative: Direct Full Search** (if skipping quick search):
+1. **Search Box** - Let users type and submit
+2. **Loading State** - Show "Searching with AI..." (3-10 seconds)
 3. **Results Display** - Show 0-5 restaurants in cards
 4. **Save Button** - "+ Save" button on each result
 5. **Empty State** - "No restaurants found. Try a different search."
@@ -695,10 +746,12 @@ The shareable link (`/shared/restaurants/{token}`) displays:
 
 ## 📝 Notes
 
-1. **OpenAI Search** - Results may vary based on AI model's web search. Always handle empty results gracefully.
-2. **Personal Data** - `visited`, `personal_rating`, `notes`, and `tags` are user-specific and private.
-3. **Restaurant IDs** - Generated by OpenAI. Same restaurant might have slightly different IDs in different searches.
-4. **Duplicate Prevention** - Backend prevents saving same `restaurant_id` twice per user.
+1. **Hybrid AI Search** - Results combine OpenAI and Gemini knowledge bases. Always handle empty results gracefully.
+2. **Real Images** - All restaurant images are fetched from Google Custom Search API for authenticity.
+3. **Personal Data** - `visited`, `personal_rating`, `notes`, and `tags` are user-specific and private.
+4. **Restaurant IDs** - Generated by the AI models. Same restaurant might have slightly different IDs in different searches.
+5. **Duplicate Prevention** - Backend prevents saving same `restaurant_id` twice per user.
+6. **Search Performance** - Detailed search takes 3-10 seconds. Use quick search for better UX.
 
 ---
 
