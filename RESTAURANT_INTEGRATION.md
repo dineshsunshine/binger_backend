@@ -352,13 +352,15 @@ const response = await fetch(
 
 Get details of a specific saved restaurant.
 
-**Endpoint:** `GET /restaurants/saved/{restaurant_id}`  
+**Endpoint:** `GET /restaurants/saved/{saved_id}`  
 **Auth Required:** Yes
+
+**Important:** Use the `id` field (UUID) from the saved restaurant response, NOT the `restaurant_id`.
 
 **Request:**
 ```javascript
 const response = await fetch(
-  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${savedRestaurant.id}`,
   { headers: { 'Authorization': `Bearer ${token}` }}
 );
 ```
@@ -374,13 +376,15 @@ const response = await fetch(
 
 Update visit status, rating, notes, or tags.
 
-**Endpoint:** `PUT /restaurants/saved/{restaurant_id}`  
+**Endpoint:** `PUT /restaurants/saved/{saved_id}`  
 **Auth Required:** Yes
+
+**Important:** Use the `id` field (UUID) from the saved restaurant response, NOT the `restaurant_id`.
 
 **Request:**
 ```javascript
 const response = await fetch(
-  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${savedRestaurant.id}`,
   {
     method: 'PUT',
     headers: {
@@ -407,13 +411,15 @@ const response = await fetch(
 
 Remove a restaurant from saved list.
 
-**Endpoint:** `DELETE /restaurants/saved/{restaurant_id}`  
+**Endpoint:** `DELETE /restaurants/saved/{saved_id}`  
 **Auth Required:** Yes
+
+**Important:** Use the `id` field (UUID) from the saved restaurant response, NOT the `restaurant_id`.
 
 **Request:**
 ```javascript
 await fetch(
-  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${restaurantId}`,
+  `https://binger-backend.onrender.com/Binger/api/restaurants/saved/${savedRestaurant.id}`,
   {
     method: 'DELETE',
     headers: { 'Authorization': `Bearer ${token}` }

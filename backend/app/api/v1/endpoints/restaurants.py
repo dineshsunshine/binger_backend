@@ -298,16 +298,16 @@ async def get_saved_restaurants(
     return results
 
 
-@router.get("/saved/{restaurant_id}", response_model=SavedRestaurantResponse)
+@router.get("/saved/{saved_id}", response_model=SavedRestaurantResponse)
 async def get_saved_restaurant(
-    restaurant_id: str,
+    saved_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Get a single saved restaurant by restaurant_id (e.g., 'bla_bla_jbr_dubai')."""
+    """Get a single saved restaurant by its UUID (the 'id' field returned when you save a restaurant)."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.restaurant_id == restaurant_id,
+            SavedRestaurant.id == saved_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
@@ -318,17 +318,17 @@ async def get_saved_restaurant(
     return saved_restaurant
 
 
-@router.put("/saved/{restaurant_id}", response_model=SavedRestaurantResponse)
+@router.put("/saved/{saved_id}", response_model=SavedRestaurantResponse)
 async def update_saved_restaurant(
-    restaurant_id: str,
+    saved_id: str,
     request: UpdateSavedRestaurantRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Update a saved restaurant (mark as visited, add notes, rating, tags)."""
+    """Update a saved restaurant (mark as visited, add notes, rating, tags). Use the UUID from the 'id' field."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.restaurant_id == restaurant_id,
+            SavedRestaurant.id == saved_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
@@ -352,16 +352,16 @@ async def update_saved_restaurant(
     return saved_restaurant
 
 
-@router.delete("/saved/{restaurant_id}", status_code=204)
+@router.delete("/saved/{saved_id}", status_code=204)
 async def delete_saved_restaurant(
-    restaurant_id: str,
+    saved_id: str,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Remove a restaurant from saved list."""
+    """Remove a restaurant from saved list. Use the UUID from the 'id' field."""
     saved_restaurant = db.query(SavedRestaurant).filter(
         and_(
-            SavedRestaurant.restaurant_id == restaurant_id,
+            SavedRestaurant.id == saved_id,
             SavedRestaurant.user_id == current_user.id
         )
     ).first()
