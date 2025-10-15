@@ -70,39 +70,55 @@ class GoogleImageService:
             logger.error(f"Unexpected error in Google Image Service: {str(e)}")
             return []
     
-    def fetch_images_for_restaurants(self, restaurants: List[dict]) -> List[dict]:
+    def fetch_images_for_restaurants(self, restaurants: List[dict], force_refetch: bool = False) -> List[dict]:
         """
         Fetch images for a list of restaurants and update their image fields.
         
         Args:
             restaurants: List of restaurant dictionaries
+            force_refetch: If True, always fetch fresh images from Google (ignore existing images)
+                          This is used for detailed search to ensure real images.
         
         Returns:
             Updated list of restaurants with images
         """
         for restaurant in restaurants:
             try:
-                # Skip if restaurant already has images
-                if restaurant.get("images") and len(restaurant["images"]) > 0:
-                    # Filter out any placeholder or invalid URLs
-                    valid_images = [
-                        img for img in restaurant["images"]
-                        if img and not img.endswith("placeholder.jpg")
-                        and "example.com" not in img.lower()
-                    ]
-                    if valid_images:
-                        restaurant["images"] = valid_images
-                        continue
+                # If force_refetch is True, skip validation and always fetch from Google
+                should_fetch = force_refetch
                 
-                # Fetch new images
-                restaurant_name = restaurant.get("restaurant_name", "")
-                location = restaurant.get("city", "")
+                # If not forcing refetch, check if we can reuse existing images
+                if not force_refetch:
+                    existing_images = restaurant.get("images", [])
+                    if existing_images and len(existing_images) > 0:
+                        # Filter out placeholder or invalid URLs
+                        valid_images = [
+                            img for img in existing_images
+                            if img 
+                            and not img.endswith("placeholder.jpg")
+                            and "example.com" not in img.lower()
+                            and "/gallery" not in img.lower()  # AI often creates fake gallery URLs
+                            and "/images/" not in img.lower()  # AI creates generic /images/ paths
+                        ]
+                        if valid_images:
+                            logger.debug(f"Reusing {len(valid_images)} existing valid images")
+                            restaurant["images"] = valid_images
+                            continue  # Skip fetching, use existing
+                    # If no valid images, we need to fetch
+                    should_fetch = True
                 
-                if restaurant_name and location:
-                    images = self.fetch_restaurant_images(restaurant_name, location, num_images=3)
-                    restaurant["images"] = images
-                else:
-                    restaurant["images"] = []
+                # Fetch new images from Google Custom Search
+                if should_fetch:
+                    restaurant_name = restaurant.get("restaurant_name", "")
+                    location = restaurant.get("city", "")
+                    
+                    if restaurant_name and location:
+                        logger.info(f"Fetching fresh images for: {restaurant_name}, {location}")
+                        images = self.fetch_restaurant_images(restaurant_name, location, num_images=3)
+                        restaurant["images"] = images
+                    else:
+                        logger.warning(f"Missing name or location, cannot fetch images")
+                        restaurant["images"] = []
                     
             except Exception as e:
                 logger.error(f"Error processing images for restaurant: {str(e)}")

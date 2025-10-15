@@ -125,10 +125,11 @@ async def search_restaurants(
             restaurants = _merge_restaurant_results(openai_restaurants, gemini_restaurants)
         
         # Fetch real images using Google Custom Search API for all results
+        # Force refetch to ensure we ALWAYS get real images (not AI-generated placeholders)
         if restaurants:
-            logger.info("Fetching real images using Google Custom Search API")
+            logger.info("Fetching real images using Google Custom Search API (force refetch)")
             image_service = GoogleImageService()
-            restaurants = image_service.fetch_images_for_restaurants(restaurants)
+            restaurants = image_service.fetch_images_for_restaurants(restaurants, force_refetch=True)
         
         return RestaurantSearchResponse(restaurants=restaurants)
     
