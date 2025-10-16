@@ -19,9 +19,59 @@ class GoogleImageService:
         self.search_engine_id = settings.GOOGLE_CUSTOM_SEARCH_ENGINE_ID
         self.base_url = "https://www.googleapis.com/customsearch/v1"
     
+    def _is_valid_image_url(self, url: str) -> bool:
+        """
+        Check if a URL is a valid direct image URL.
+        
+        Args:
+            url: URL to validate
+        
+        Returns:
+            True if URL is a valid image URL, False otherwise
+        """
+        if not url:
+            return False
+        
+        url_lower = url.lower()
+        
+        # Valid image extensions
+        valid_extensions = ('.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp')
+        
+        # Check if URL ends with a valid image extension
+        # or has valid extension followed by query parameters
+        has_valid_extension = any(
+            ext in url_lower for ext in valid_extensions
+        )
+        
+        if not has_valid_extension:
+            return False
+        
+        # Blacklist social media and known non-direct image URLs
+        blacklist_domains = [
+            'instagram.com',
+            'facebook.com',
+            'twitter.com',
+            'x.com',
+            'tiktok.com',
+            'youtube.com',
+            'linkedin.com',
+            'pinterest.com',
+            '/profile/',
+            '/user/',
+            '/account/',
+        ]
+        
+        # Check if URL contains any blacklisted domains/patterns
+        if any(domain in url_lower for domain in blacklist_domains):
+            logger.debug(f"Filtered out social media URL: {url}")
+            return False
+        
+        return True
+    
     def fetch_restaurant_images(self, restaurant_name: str, location: str, num_images: int = 3) -> List[str]:
         """
         Fetch restaurant images using Google Custom Search API.
+        Only returns direct image URLs with proper extensions (jpg, jpeg, png, gif, webp).
         
         Args:
             restaurant_name: Name of the restaurant
@@ -29,19 +79,19 @@ class GoogleImageService:
             num_images: Number of images to fetch (default: 3, max: 10)
         
         Returns:
-            List of image URLs
+            List of valid direct image URLs
         """
         try:
             # Construct search query
             query = f"{restaurant_name} {location} restaurant food"
             
-            # API parameters
+            # API parameters - request more images to account for filtering
             params = {
                 "key": self.api_key,
                 "cx": self.search_engine_id,
                 "searchType": "image",
                 "q": query,
-                "num": min(num_images, 10),  # Google Custom Search max is 10
+                "num": 10,  # Request max to ensure we get enough valid ones
                 "safe": "active"  # Filter explicit content
             }
             
@@ -53,14 +103,22 @@ class GoogleImageService:
             
             data = response.json()
             
-            # Extract image URLs
+            # Extract and validate image URLs
             images = []
             if "items" in data:
                 for item in data["items"]:
                     if "link" in item:
-                        images.append(item["link"])
+                        url = item["link"]
+                        
+                        # Only add valid image URLs
+                        if self._is_valid_image_url(url):
+                            images.append(url)
+                            
+                            # Stop once we have enough valid images
+                            if len(images) >= num_images:
+                                break
             
-            logger.info(f"Found {len(images)} images for {restaurant_name}")
+            logger.info(f"Found {len(images)} valid image URLs for {restaurant_name} (filtered from {len(data.get('items', []))} results)")
             return images[:num_images]
             
         except requests.exceptions.RequestException as e:
@@ -91,14 +149,10 @@ class GoogleImageService:
                 if not force_refetch:
                     existing_images = restaurant.get("images", [])
                     if existing_images and len(existing_images) > 0:
-                        # Filter out placeholder or invalid URLs
+                        # Filter using the same validation as fetch
                         valid_images = [
                             img for img in existing_images
-                            if img 
-                            and not img.endswith("placeholder.jpg")
-                            and "example.com" not in img.lower()
-                            and "/gallery" not in img.lower()  # AI often creates fake gallery URLs
-                            and "/images/" not in img.lower()  # AI creates generic /images/ paths
+                            if self._is_valid_image_url(img)
                         ]
                         if valid_images:
                             logger.debug(f"Reusing {len(valid_images)} existing valid images")
